@@ -23,6 +23,8 @@ Dictionary<string, string> StickersByCommand = new Dictionary<string, string>
     ["остановитесь"] = "https://tlgrm.ru/_/stickers/230/5c9/2305c9a3-dd7a-37b3-b38c-27e99d652dc2/2.webp"
 };
 
+
+
 // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
 var receiverOptions = new ReceiverOptions
 {
@@ -63,6 +65,13 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             parseMode: ParseMode.MarkdownV2,
             replyToMessageId: message.ReplyToMessage?.MessageId,
             cancellationToken: cancellationToken);
+    } else if (messageText.ToLower().Contains("путін")) {
+            await botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "*путін ХУЙЛО\\! Ла ла ла ла ла ла ла ла*",
+                parseMode: ParseMode.MarkdownV2,
+                replyToMessageId: message.ReplyToMessage?.MessageId,
+                cancellationToken: cancellationToken);
     }
 
     var commandsList = message.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
