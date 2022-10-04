@@ -3,9 +3,18 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
+using Microsoft.Extensions.Configuration;
 
-var botClient = new TelegramBotClient("5650690767:AAGpykNlGiErwSo8Jq91VJREFXrRSkBE7O0");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+var builder = new ConfigurationBuilder()
+            .AddJsonFile($"appsettings.json", false, true)
+            .AddJsonFile($"appsettings.Local.json", true, true)
+            .AddEnvironmentVariables();
+var configuration = builder.Build();
+var token = configuration.GetValue<string>("TelegramToken");
+
+var botClient = new TelegramBotClient(token);
 
 using var cts = new CancellationTokenSource();
 
