@@ -63,6 +63,13 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             parseMode: ParseMode.MarkdownV2,
             replyToMessageId: message.ReplyToMessage?.MessageId,
             cancellationToken: cancellationToken);
+    } else if (messageText.ToLower().Contains("путін")) {
+            await botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: "*путін ХУЙЛО\\! Ла ла ла ла ла ла ла ла*",
+            parseMode: ParseMode.MarkdownV2,
+            replyToMessageId: message.ReplyToMessage?.MessageId,
+            cancellationToken: cancellationToken);
     }
 
     var commandsList = message.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
