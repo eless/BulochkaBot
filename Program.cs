@@ -55,6 +55,16 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     var chatId = message.Chat.Id;
     Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
+    if(messageText == "Слава Україні!")
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: "*Героям слава\\!*",
+            parseMode: ParseMode.MarkdownV2,
+            replyToMessageId: message.ReplyToMessage?.MessageId,
+            cancellationToken: cancellationToken);
+    }
+
     var commandsList = message.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
     if (commandsList[0] != "бот") return;
@@ -69,7 +79,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
     }
 */
-    if (StickersByCommand.TryGetValue(commandsList[1], out string? stickerLink))
+    if (commandsList.Length > 1 && StickersByCommand.TryGetValue(commandsList[1], out string? stickerLink))
     {
         await botClient.SendStickerAsync(
             chatId: chatId,
