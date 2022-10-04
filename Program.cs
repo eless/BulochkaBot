@@ -43,6 +43,44 @@ Console.ReadLine();
 // Send cancellation request to stop bot
 cts.Cancel();
 
+String generatePutinMsg()
+{
+    string[] names = new string[] {
+        "виблядь",
+        "підар",
+        "курва",
+        "паскуда",
+        "кончь",
+        "хуйло",
+        "йобаний",
+        "чмо",
+        "підріла",
+        "сука",
+        "мразь",
+        "крисюк",
+        "пиздун",
+        "тупий",
+        "лаптєногий",
+        "скрєпний",
+        "підофільйо",
+        "падло",
+        "підарас",
+        "бидло",
+        "пітух",
+    };
+    var putinsName = "";
+
+    Random r = new Random();
+    int words = r.Next(1, 4);
+
+    for (int i = 0; i < words; i++) {
+        var idx = r.Next(0, names.Count());
+        putinsName += names[idx];
+        putinsName += " ";
+    }
+    return putinsName;
+}
+
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
     // Only process Message updates: https://core.telegram.org/bots/api#message
@@ -52,7 +90,11 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     if (message.Text is not { } messageText)
         return;
 
-    var chatId = message.Chat.Id;
+    var chatId = message.Chat.Id; 
+    // if (chatId == -1001344803304) {
+    //     return;
+    // }
+
     Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
     if(messageText == "Слава Україні!")
@@ -64,9 +106,16 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             replyToMessageId: message.ReplyToMessage?.MessageId,
             cancellationToken: cancellationToken);
     } else if (messageText.ToLower().Contains("путін")) {
+            Random reply = new Random();
+            if (reply.Next(0, 10) == 0) { // ignore reply in some cases
+                return;
+            }
+            var name = "путін ";
+            name += generatePutinMsg();
+
             await botClient.SendTextMessageAsync(
             chatId: chatId,
-            text: "*путін ХУЙЛО\\! Ла ла ла ла ла ла ла ла*",
+            text: name,
             parseMode: ParseMode.MarkdownV2,
             replyToMessageId: message.ReplyToMessage?.MessageId,
             cancellationToken: cancellationToken);
