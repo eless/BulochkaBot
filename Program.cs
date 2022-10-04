@@ -1,4 +1,4 @@
-﻿using Telegram.Bot;
+using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
@@ -72,6 +72,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 parseMode: ParseMode.MarkdownV2,
                 replyToMessageId: message.ReplyToMessage?.MessageId,
                 cancellationToken: cancellationToken);
+
     }
 
     var commandsList = message.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
