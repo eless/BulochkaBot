@@ -5,6 +5,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 
 var botClient = new TelegramBotClient("5650690767:AAGpykNlGiErwSo8Jq91VJREFXrRSkBE7O0");
+Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 using var cts = new CancellationTokenSource();
 
@@ -48,7 +49,17 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     var commandsList = message.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
     if (commandsList[0] != "бот") return;
-    
+/*
+    if(message.From.Username == "i_sirius")
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: $"@{message.From.Username} дає пізди всім.",
+            replyToMessageId: message.ReplyToMessage?.MessageId,
+            cancellationToken: cancellationToken);
+
+    }
+*/
     if (StickersByCommand.TryGetValue(commandsList[1], out string? stickerLink))
     {
         await botClient.SendStickerAsync(
