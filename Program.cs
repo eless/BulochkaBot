@@ -8,6 +8,11 @@ var botClient = new TelegramBotClient("5650690767:AAGpykNlGiErwSo8Jq91VJREFXrRSk
 
 using var cts = new CancellationTokenSource();
 
+Dictionary<string, string> StickersByCommand = new Dictionary<string, string>
+{
+    ["остановитесь"] = "https://tlgrm.ru/_/stickers/230/5c9/2305c9a3-dd7a-37b3-b38c-27e99d652dc2/2.webp"
+};
+
 // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
 var receiverOptions = new ReceiverOptions
 {
@@ -39,13 +44,26 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
     var chatId = message.Chat.Id;
     Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
-    if (!message.Text.StartsWith("бот ")) return;
 
+    var commandsList = message.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+    if (commandsList[0] != "бот") return;
+    
+    if (StickersByCommand.TryGetValue(commandsList[1], out string? stickerLink))
+    {
+        await botClient.SendStickerAsync(
+            chatId: chatId,
+            sticker: stickerLink,
+            cancellationToken: cancellationToken);
+        return;
+    }
+
+    var correctMessageText = messageText.Remove(0, 3).TrimStart();
 
     Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
     var answer = message.ReplyToMessage?.MessageId != null ? $"у відповідь:": "";
 
-    var text = $"@{message.From.Username} {answer} {messageText.Remove(0,3).TrimStart()}";
+    var text = $"@{message.From.Username} {answer} {correctMessageText}";
     // Echo received message text
     Message sentMessage = await botClient.SendTextMessageAsync(
         chatId: chatId,
