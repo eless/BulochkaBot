@@ -24,6 +24,17 @@ var StickersByCommand = new Dictionary<string, string>
     ["остановитесь"] = "https://tlgrm.ru/_/stickers/230/5c9/2305c9a3-dd7a-37b3-b38c-27e99d652dc2/2.webp"
 };
 
+List<long> MutedInChats = new List<long>();
+
+var Commands = new List<BotCommand>();
+var command = new BotCommand();
+command.Command = "off"; command.Description = "вимкнути бота в чаті";
+Commands.Add(command);
+command = new BotCommand();
+command.Command = "on"; command.Description = "ввімкнути бота в чаті";
+Commands.Add(command);
+
+await botClient.SetMyCommandsAsync(Commands, cancellationToken: cts.Token);
 // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
 var receiverOptions = new ReceiverOptions
 {
