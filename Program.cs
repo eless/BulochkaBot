@@ -4,6 +4,7 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 using Microsoft.Extensions.Configuration;
+using BarracudaTestBot;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
@@ -18,7 +19,7 @@ var botClient = new TelegramBotClient(token);
 
 using var cts = new CancellationTokenSource();
 
-Dictionary<string, string> StickersByCommand = new Dictionary<string, string>
+var StickersByCommand = new Dictionary<string, string>
 {
     ["остановитесь"] = "https://tlgrm.ru/_/stickers/230/5c9/2305c9a3-dd7a-37b3-b38c-27e99d652dc2/2.webp"
 };
@@ -55,37 +56,19 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     var chatId = message.Chat.Id;
     Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
-    if(messageText == "Слава Україні!")
-    {
-        await botClient.SendTextMessageAsync(
-            chatId: chatId,
-            text: "*Героям слава\\!*",
-            parseMode: ParseMode.MarkdownV2,
-            replyToMessageId: message.ReplyToMessage?.MessageId,
-            cancellationToken: cancellationToken);
-    } else if (messageText.ToLower().Contains("путін")) {
-            await botClient.SendTextMessageAsync(
-            chatId: chatId,
-            text: "*путін ХУЙЛО\\! Ла ла ла ла ла ла ла ла*",
-            parseMode: ParseMode.MarkdownV2,
-            replyToMessageId: message.ReplyToMessage?.MessageId,
-            cancellationToken: cancellationToken);
-    }
+    var commandsList = messageText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-    var commandsList = message.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    if (messageText == "Слава Україні!")
+    {
+        await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, "*Героям слава\\!*", cancellationToken);
+    }
+    else if (messageText.ToLower().Contains("путін"))
+    {
+        await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, "*путін ХУЙЛО\\! Ла ла ла ла ла ла ла ла*", cancellationToken);
+    }
 
     if (commandsList[0] != "бот") return;
-/*
-    if(message.From.Username == "i_sirius")
-    {
-        await botClient.SendTextMessageAsync(
-            chatId: chatId,
-            text: $"@{message.From.Username} дає пізди всім.",
-            replyToMessageId: message.ReplyToMessage?.MessageId,
-            cancellationToken: cancellationToken);
 
-    }
-*/
     if (commandsList.Length > 1 && StickersByCommand.TryGetValue(commandsList[1], out string? stickerLink))
     {
         await botClient.SendStickerAsync(
@@ -97,16 +80,12 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
     var correctMessageText = messageText.Remove(0, 3).TrimStart();
 
-    Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
-    var answer = message.ReplyToMessage?.MessageId != null ? $"у відповідь:": "";
+    var answer = message.ReplyToMessage?.MessageId != null ? $"у відповідь:" : "";
 
     var text = $"@{message.From.Username} {answer} {correctMessageText}";
-    // Echo received message text
-    Message sentMessage = await botClient.SendTextMessageAsync(
-        chatId: chatId,
-        text: text,
-        replyToMessageId: message.ReplyToMessage?.MessageId,
-        cancellationToken: cancellationToken);
+
+    await botClient.DeleteMessageAsync(chatId, message.MessageId);
+    await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, text, cancellationToken);
 }
 
 Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
