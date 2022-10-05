@@ -35,6 +35,9 @@ Commands.Add(command);
 command = new BotCommand();
 command.Command = "on"; command.Description = "ввімкнути бота в чаті";
 Commands.Add(command);
+command = new BotCommand();
+command.Command = "losses"; command.Description = "шо там по русні?";
+Commands.Add(command);
 
 await botClient.SetMyCommandsAsync(Commands, cancellationToken: cts.Token);
 // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
@@ -79,7 +82,12 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     }
     else if (messageText.ToLower().Contains("путін"))
     {
-        await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, "*путін ХУЙЛО\\! Ла ла ла ла ла ла ла ла*", cancellationToken);
+        PutinGenerator ptn = new PutinGenerator();
+        await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, ptn.GetName(), cancellationToken);
+    } else if (messageText == "/losses") {
+        Losses losses = new Losses();
+        var res = await losses.GetData();
+        await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, res, cancellationToken);
     }
 
     if (commandsList[0] != "бот") return;
