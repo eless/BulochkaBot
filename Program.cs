@@ -8,6 +8,8 @@ using BarracudaTestBot;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+var dateOfStart = DateTime.UtcNow;
+
 var builder = new ConfigurationBuilder()
             .AddJsonFile($"appsettings.json", false, true)
             .AddJsonFile($"appsettings.Local.json", true, true)
@@ -57,6 +59,8 @@ cts.Cancel();
 
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
+    if (update.Message?.Date < dateOfStart) return;
+
     // Only process Message updates: https://core.telegram.org/bots/api#message
     if (update.Message is not { } message)
         return;
@@ -96,7 +100,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     var text = $"@{message.From.Username} {answer} {correctMessageText}";
 
     await botClient.DeleteMessageAsync(chatId, message.MessageId);
-    await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, text, cancellationToken);
+    await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, text, cancellationToken, null);
 }
 
 Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)

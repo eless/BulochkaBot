@@ -1,7 +1,6 @@
 ﻿using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 using Telegram.Bot;
-using Telegram.Bot.Requests.Abstractions;
 
 namespace BarracudaTestBot
 {
@@ -11,11 +10,11 @@ namespace BarracudaTestBot
             int? replyTo,
             long chatId,
             string text,
-            CancellationToken cancellationToken) => 
+            CancellationToken cancellationToken, ParseMode? parseMode = ParseMode.MarkdownV2) => 
                 await botClient.SendTextMessageAsync(
                     chatId: chatId,
                     text: text,
-                    parseMode: ParseMode.MarkdownV2,
+                    parseMode: parseMode,
                     replyToMessageId: replyTo,
                     cancellationToken: cancellationToken);
 
