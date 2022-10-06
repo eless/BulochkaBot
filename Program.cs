@@ -23,6 +23,7 @@ using var cts = new CancellationTokenSource();
 
 var StickersByCommand = new Dictionary<string, string>
 {
+    ["ктоплатит"] = "https://sticker-collection.com/stickers/plain/vosem_let/512/7c81d17f-6aac-40fd-bba3-e283348b1c9afile_1910543.webp",
     ["остановитесь"] = "https://tlgrm.ru/_/stickers/230/5c9/2305c9a3-dd7a-37b3-b38c-27e99d652dc2/2.webp"
 };
 
