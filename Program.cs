@@ -5,6 +5,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 using Microsoft.Extensions.Configuration;
 using BarracudaTestBot;
+using BarracudaTestBot.Checkers;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
@@ -69,18 +70,17 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
     var commandsList = messageText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-    if (messageText == "Слава Україні!")
+    var checkedWord = new WordChecker().GetAnswerByCommand(messageText);
+
+    if (!string.IsNullOrEmpty(checkedWord))
     {
-        await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, "*Героям слава\\!*", cancellationToken);
-    }
-    else if (messageText.ToLower().Contains("путін"))
-    {
-        await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, "*путін ХУЙЛО\\! Ла ла ла ла ла ла ла ла*", cancellationToken);
+        await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, checkedWord, cancellationToken);
+        return;
     }
 
     if (commandsList[0] != "бот") return;
 
-    var stickerSender = new StickerSender();
+    var stickerSender = new StickerChecker();
     if (commandsList.Length > 1 && stickerSender.IsStickerCommand(commandsList[1]))
     {
         await botClient.SendStickerAsync(
