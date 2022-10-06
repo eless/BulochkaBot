@@ -1,0 +1,31 @@
+﻿
+namespace BarracudaTestBot;
+
+public class StickerSender
+{
+    private Dictionary<string, List<string>> _stickersByCommand = new Dictionary<string, List<string>>
+    {
+        ["ктоплатит"] = new List<string> { "https://sticker-collection.com/stickers/plain/vosem_let/512/7c81d17f-6aac-40fd-bba3-e283348b1c9afile_1910543.webp" },
+        ["остановитесь"] = new List<string> { "https://tlgrm.ru/_/stickers/230/5c9/2305c9a3-dd7a-37b3-b38c-27e99d652dc2/2.webp" },
+        ["тривога"] = new List<string>
+                {
+                    "https://sticker-collection.com/stickers/plain/Povitryana_tryvoha/512/e739064c-be9d-4787-a628-8bb7939dec54file_1875815.webp",
+                    "https://sticker-collection.com/stickers/plain/Povitryana_tryvoha/512/acee37c2-7cea-49de-9ee6-b7cda696b7d3file_1875819.webp"
+                },
+        ["відбій"] = new List<string>
+                {
+                    "https://sticker-collection.com/stickers/plain/Povitryana_tryvoha/512/d9ce940c-e68a-4ae0-b069-518634eff356file_1875818.webp",
+                    "https://sticker-collection.com/stickers/plain/Povitryana_tryvoha/512/f9d0b34c-c8db-4c5c-af66-fd90ab25f601file_1875820.webp"
+                }
+    };
+
+    public bool IsStickerCommand(string command) => _stickersByCommand.ContainsKey(command);
+
+    public string GetStickerLink(string command)
+    {
+        _stickersByCommand.TryGetValue(command, out List<string> stickerLinks);
+        var rnd = new Random();
+        var stickerLink = stickerLinks.OrderBy(s => rnd.Next()).First();
+        return stickerLink;
+    }
+}
