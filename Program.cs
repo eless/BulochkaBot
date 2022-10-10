@@ -3,20 +3,27 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
-using Microsoft.Extensions.Configuration;
 using BarracudaTestBot;
 using BarracudaTestBot.Checkers;
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+
+ConfigureServices(builder);
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 var dateOfStart = DateTime.UtcNow;
 
-var builder = new ConfigurationBuilder()
-            .AddJsonFile($"appsettings.json", false, true)
+    builder.Configuration.AddJsonFile($"appsettings.json", false, true)
             .AddJsonFile($"appsettings.Local.json", true, true)
             .AddEnvironmentVariables();
-var configuration = builder.Build();
-var token = configuration.GetValue<string>("TelegramToken");
+
+var app = builder.Build();
+
+
+var token = builder.Configuration.GetValue<string>("TelegramToken");
 
 var botClient = new TelegramBotClient(token);
 
@@ -67,6 +74,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
     var chatId = message.Chat.Id;
     Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
+    System.Diagnostics.Trace.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
     var commandsList = messageText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
@@ -111,4 +119,13 @@ Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, 
 
     Console.WriteLine(ErrorMessage);
     return Task.CompletedTask;
+}
+
+
+void ConfigureServices(WebApplicationBuilder builder)
+{
+    var services = builder.Services;
+
+    services.AddControllers();
+
 }
