@@ -67,7 +67,7 @@ namespace RusLosses {
                     return string.Empty;
                 }
                 System.Text.StringBuilder builder = new System.Text.StringBuilder("");
-                string format = "{0}: {1} \\+ \\({2}\\){3})";
+                string format = "{0}: {1} \\+ \\({2}\\){3}";
                 builder.AppendFormat(format, "русні", losses.data.stats.personnel_units, losses.data.increase.personnel_units, "мальчіков в трусіках\n");
                 builder.AppendFormat(format, "скрєпних танків", losses.data.stats.tanks, losses.data.increase.tanks, "\n");
                 builder.AppendFormat(format, "бойових броньованих машин", losses.data.stats.armoured_fighting_vehicles, losses.data.increase.armoured_fighting_vehicles, "\n");
