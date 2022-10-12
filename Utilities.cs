@@ -21,4 +21,22 @@ namespace BarracudaTestBot
         public static int GetRandomNumber(int from, int to) => new Random().Next(from, to);
 
     }
+
+    public class PingService : BackgroundService
+    {
+        protected override async Task ExecuteAsync(CancellationToken stop)
+        {
+            while(!stop.IsCancellationRequested)
+            {
+                await Task.Delay(10000, stop);
+                using var client = new HttpClient();
+                try {
+                    var content = await client.GetStringAsync("https://testwebapp182.azurewebsites.net/");
+                    Console.WriteLine(content);
+                } catch (HttpRequestException hre) {
+                    Console.WriteLine(hre);
+                }
+            }
+        }
+    }
 }
