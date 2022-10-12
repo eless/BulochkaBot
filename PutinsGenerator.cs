@@ -53,7 +53,7 @@ namespace PtnGen {
             "скрєпний",
         };
 
-        public string GetName()
+        public string GenerateName()
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder("путін ");
             int adjectivesCount = Utilities.GetRandomNumber(1, 3);
