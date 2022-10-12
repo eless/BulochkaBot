@@ -68,7 +68,7 @@ namespace RusLosses {
                 }
                 System.Text.StringBuilder builder = new System.Text.StringBuilder("");
                 string format = "{0}: {1} \\+ \\({2}\\){3}";
-                builder.AppendFormat(format, "русні", losses.data.stats.personnel_units, losses.data.increase.personnel_units, "мальчіков в трусіках\n");
+                builder.AppendFormat(format, "русні", losses.data.stats.personnel_units, losses.data.increase.personnel_units, " мальчіков в трусіках\n");
                 builder.AppendFormat(format, "скрєпних танків", losses.data.stats.tanks, losses.data.increase.tanks, "\n");
                 builder.AppendFormat(format, "бойових броньованих машин", losses.data.stats.armoured_fighting_vehicles, losses.data.increase.armoured_fighting_vehicles, "\n");
                 builder.AppendFormat(format, "артилерійських систем", losses.data.stats.artillery_systems, losses.data.increase.artillery_systems, "\n");
@@ -78,7 +78,7 @@ namespace RusLosses {
                 builder.AppendFormat(format, "гелікоптерів", losses.data.stats.helicopters, losses.data.increase.helicopters, "\n");
                 builder.AppendFormat(format, "БПЛА оперативно\\-тактичного рівня", losses.data.stats.uav_systems, losses.data.increase.uav_systems, "\n");
                 builder.AppendFormat(format, "крилатих ракет", losses.data.stats.cruise_missiles, losses.data.increase.cruise_missiles, "\n");
-                builder.AppendFormat(format, "ораблі\\/катери", losses.data.stats.warships_cutters, losses.data.increase.warships_cutters, "\n");
+                builder.AppendFormat(format, "кораблі\\/катери", losses.data.stats.warships_cutters, losses.data.increase.warships_cutters, "\n");
                 builder.AppendFormat(format, "автомобільної техніки та автоцистерн", losses.data.stats.vehicles_fuel_tanks, losses.data.increase.vehicles_fuel_tanks, "\n");
                 builder.AppendFormat(format, "спеціальна техніка", losses.data.stats.special_military_equip, losses.data.increase.special_military_equip, "\n");
                 return builder.ToString();
