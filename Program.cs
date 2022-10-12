@@ -30,7 +30,7 @@ internal class Program
 
         app.MapGet("/", () => $"{app.Environment.ApplicationName} has started {_dateOfStart} UTC. Hallo, Sweetie!");
 
-        app.Start();
+        await app.StartAsync();
 
         var token = builder.Configuration.GetValue<string>("TelegramToken");
 
