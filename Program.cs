@@ -28,7 +28,7 @@ internal class Program
         var app = builder.Build();
         app.UseStaticFiles();
 
-        app.MapGet("/", () => $"{app.Environment.ApplicationName} has started as WebApp. Hallo, Sweetie!");
+        app.MapGet("/", () => $"{app.Environment.ApplicationName} has started {_dateOfStart} UTC. Hallo, Sweetie!");
 
         app.Start();
 
