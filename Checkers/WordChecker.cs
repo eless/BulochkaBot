@@ -14,7 +14,7 @@ public class WordChecker
     {
         [new Regex("^Слава Україні!$")] = () => "*Героям слава\\!*",
         [new Regex("путін", RegexOptions.IgnoreCase)] = () => puiulo.GetName(),
-        // [new Regex("^/losses$")] = () => losses.GetData(),
+        [new Regex("^/losses$")] = () => losses.GetData().Result,
     };
 
     public string GetAnswerByCommand(string command)

@@ -28,11 +28,12 @@ internal class Program
         var app = builder.Build();
         app.UseStaticFiles();
 
+        var token = builder.Configuration.GetValue<string>("TelegramToken");
+
         app.MapGet("/", () => $"{app.Environment.ApplicationName} has started {_dateOfStart} UTC. Hallo, Sweetie!");
 
         await app.StartAsync();
 
-        var token = builder.Configuration.GetValue<string>("TelegramToken");
 
         var botClient = new TelegramBotClient(token);
 
@@ -93,7 +94,14 @@ internal class Program
 
         if (!string.IsNullOrEmpty(checkedWord))
         {
-            await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, checkedWord, cancellationToken);
+            try
+            {
+                await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, checkedWord, cancellationToken);
+            }
+            catch (ApiRequestException)
+            {
+                await botClient.SendText(message.ReplyToMessage?.MessageId, chatId, checkedWord, cancellationToken, null);
+            }
             return;
         }
 
