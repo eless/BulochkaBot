@@ -32,13 +32,9 @@ internal class Program
 
         app.MapGet("/", () => $"{app.Environment.ApplicationName} has started {_dateOfStart} UTC. Hallo, Sweetie!");
 
-        await app.StartAsync();
-
-
         var botClient = new TelegramBotClient(token);
 
         using var cts = new CancellationTokenSource();
-
 
         List<long> MutedInChats = new List<long>();
 
@@ -68,6 +64,8 @@ internal class Program
         Console.WriteLine($"Start listening for @{me.Username}");
         Console.ReadLine();
 
+
+        await app.StartAsync();
         // Send cancellation request to stop bot
         cts.Cancel();
 
