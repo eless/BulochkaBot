@@ -66,8 +66,6 @@ public class BotService
         var chatId = message.Chat.Id;
         System.Diagnostics.Trace.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
-        var commandsList = messageText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
         var checkedWord = new WordChecker().GetAnswerByCommand(messageText);
 
         if (!string.IsNullOrEmpty(checkedWord))
@@ -83,17 +81,21 @@ public class BotService
             return;
         }
 
-        if (commandsList[0] != "бот") return;
-
         var stickerSender = new StickerChecker();
-        if (commandsList.Length > 1 && stickerSender.IsStickerCommand(commandsList[1]))
+        if (stickerSender.IsStickerCommand(messageText))
         {
+            await botClient.DeleteMessageAsync(chatId, message.MessageId);
             await botClient.SendStickerAsync(
                 chatId: chatId,
-                sticker: stickerSender.GetStickerLink(commandsList[1]),
+                sticker: stickerSender.GetStickerLink(messageText),
+                replyToMessageId: message.ReplyToMessage?.MessageId,
                 cancellationToken: cancellationToken);
             return;
         }
+
+        var commandsList = messageText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (commandsList[0] != "бот") return;
 
         var correctMessageText = messageText.Remove(0, 3).TrimStart();
 
