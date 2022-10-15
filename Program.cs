@@ -22,11 +22,13 @@ internal class Program
         app.UseStaticFiles();
 
         app.UseRouting();
+        var startDate = DateTime.UtcNow;
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapGet("/", async context => { await context.Response.WriteAsync($"{app.Environment.ApplicationName} has started at {DateTime.UtcNow} UTC. Hallo, Sweetie!"); });
+            endpoints.MapGet("/", async context => { await context.Response.WriteAsync($"{app.Environment.ApplicationName} has started at {startDate} UTC. Hallo, Sweetie!"); });
         });
 
+        System.Diagnostics.Trace.WriteLine($"app started at {startDate}");
         app.Start();
 
         var botService = app.Services.GetService<BotService>();
