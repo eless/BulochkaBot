@@ -28,8 +28,9 @@ internal class Program
             endpoints.MapGet("/", async context => { await context.Response.WriteAsync($"{app.Environment.ApplicationName} has started at {startDate} UTC. Hallo, Sweetie!"); });
         });
 
-        System.Diagnostics.Trace.WriteLine($"app started at {startDate}");
+        System.Diagnostics.Trace.WriteLine($"app starting at {startDate}");
         await app.StartAsync();
+        System.Diagnostics.Trace.WriteLine($"app started");
 
         var botService = app.Services.GetService<BotService>();
 
