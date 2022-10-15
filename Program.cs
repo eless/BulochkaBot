@@ -29,7 +29,7 @@ internal class Program
         });
 
         System.Diagnostics.Trace.WriteLine($"app started at {startDate}");
-        app.Start();
+        await app.StartAsync();
 
         var botService = app.Services.GetService<BotService>();
 
