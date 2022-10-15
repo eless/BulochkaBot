@@ -28,16 +28,17 @@ internal class Program
             endpoints.MapGet("/", async context => { await context.Response.WriteAsync($"{app.Environment.ApplicationName} has started at {startDate} UTC. Hallo, Sweetie!"); });
         });
 
-        System.Diagnostics.Trace.WriteLine($"app starting at {startDate}");
-        await app.StartAsync();
-        System.Diagnostics.Trace.WriteLine($"app started");
-
         var botService = app.Services.GetService<BotService>();
 
         using var cts = new CancellationTokenSource();
-        await botService.Start(cts);
+        botService.Start(cts);
+
+        System.Diagnostics.Trace.WriteLine($"app starting at {startDate}");
+        app.Run();
+        System.Diagnostics.Trace.WriteLine($"app started");
 
         // Send cancellation request to stop bot
         cts.Cancel();
+
     }
 }
