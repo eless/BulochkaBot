@@ -14,6 +14,9 @@ public class BotService
     private readonly string _token;
     private readonly TelegramBotClient _botClient;
 
+    List<long> MutedInChats { get; set; } = new List<long>();
+
+
     public BotService(IConfiguration configuration)
     {
         _token = configuration.GetValue<string>("TelegramToken");
@@ -22,8 +25,6 @@ public class BotService
 
     public async Task Start(CancellationTokenSource cts)
     {
-       var MutedInChats = new List<long>();
-
         var Commands = new List<BotCommand>();
         var command = new BotCommand();
         command.Command = "off"; command.Description = "вимкнути бота в чаті";
@@ -66,6 +67,15 @@ public class BotService
 
         var chatId = message.Chat.Id;
         System.Diagnostics.Trace.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
+
+        if(messageText == "/off@BarracudaTestBot")
+        {
+            MutedInChats.Add(chatId);
+        } else if(messageText == "/on@BarracudaTestBot")
+        {
+            MutedInChats.Remove(chatId);
+        }
+        if (MutedInChats.Contains(chatId)) return;
 
         var checkedWord = new WordChecker().GetAnswerByCommand(messageText);
 
