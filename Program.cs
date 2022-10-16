@@ -1,4 +1,5 @@
 ﻿using BarracudaTestBot.Services;
+using BarracudaTestBot;
 
 internal class Program
 {
@@ -6,7 +7,8 @@ internal class Program
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         var builder = WebApplication.CreateBuilder(args);
-
+        // Ping the host site every 10 minutes in order to prevent the web app from unloading.
+        builder.Services.AddHostedService<PingService>();
         builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
         {
             config.AddJsonFile($"appsettings.json", false, true)
