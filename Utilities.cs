@@ -12,7 +12,7 @@ namespace BarracudaTestBot
 
     public class PingService : BackgroundService
     {
-        private int pingPeriod = 1000 * 60 * 10;
+        private int pingPeriod = 1000 * 60;
         private string urlToPing = "https://barracudatestbot.azurewebsites.net";
 
         protected override async Task ExecuteAsync(CancellationToken cts)
