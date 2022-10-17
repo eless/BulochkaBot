@@ -4,6 +4,7 @@ public class StickerChecker
 {
     private Dictionary<string, List<string>> _stickersByCommand = new Dictionary<string, List<string>>
     {
+        ["русні пизда"] = new List<string> { "CAACAgIAAxkBAAEBZWljTVG3uiQ6EpmPJNLPCMQYqgHKpAAC0R0AAtz9eUiSMtzqMNIUsioE" },
         ["ктоплатит"] = new List<string> { "https://sticker-collection.com/stickers/plain/vosem_let/512/7c81d17f-6aac-40fd-bba3-e283348b1c9afile_1910543.webp" },
         ["остановитесь"] = new List<string> { "https://tlgrm.ru/_/stickers/230/5c9/2305c9a3-dd7a-37b3-b38c-27e99d652dc2/2.webp" },
         ["тривога"] = new List<string>
@@ -26,7 +27,7 @@ public class StickerChecker
     {
         _stickersByCommand.TryGetValue(command, out List<string> stickerLinks);
         var rnd = new Random();
-        var stickerLink = stickerLinks.OrderBy(s => rnd.Next()).First();
-        return stickerLink;
+        var stickerLink = stickerLinks?.OrderBy(s => rnd.Next()).First();
+        return stickerLink ?? String.Empty;
     }
 }
