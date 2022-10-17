@@ -13,27 +13,37 @@ public class BotService
 
     private readonly string _token;
     private readonly TelegramBotClient _botClient;
+    private readonly WordChecker _wordChecker;
+    private readonly StickerChecker _stickerChecker;
 
     List<long> MutedInChats { get; set; } = new List<long>();
 
+    Dictionary<string, string> Commands = new Dictionary<string, string>
+    {
+        ["off"] = "вимкнути бота в чаті",
+        ["on"] = "ввімкнути бота в чаті",
+        ["losses"] = "втрати підарасні на сьогодні"
+    };
 
-    public BotService(IConfiguration configuration)
+    public BotService(IConfiguration configuration,
+        WordChecker wordChecker, StickerChecker stickerChecker)
     {
         _token = configuration.GetValue<string>("TelegramToken");
         _botClient = new TelegramBotClient(_token);
+        _wordChecker = wordChecker;
+        _stickerChecker = stickerChecker;
     }
 
     public async Task Start(CancellationTokenSource cts)
     {
-        var Commands = new List<BotCommand>();
-        var command = new BotCommand();
-        command.Command = "off"; command.Description = "вимкнути бота в чаті";
-        Commands.Add(command);
-        command = new BotCommand();
-        command.Command = "on"; command.Description = "ввімкнути бота в чаті";
-        Commands.Add(command);
-
-        await _botClient.SetMyCommandsAsync(Commands, cancellationToken: cts.Token);
+        var commands = new List<BotCommand>();
+        foreach (var commandKVP in Commands)
+        {
+            var command = new BotCommand();
+            command.Command = commandKVP.Key; command.Description = commandKVP.Value;
+            commands.Add(command);
+        }
+        await _botClient.SetMyCommandsAsync(commands, cancellationToken: cts.Token);
         // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
         var receiverOptions = new ReceiverOptions
         {
@@ -65,16 +75,16 @@ public class BotService
         var chatId = message.Chat.Id;
         System.Diagnostics.Trace.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
-        if(messageText == "/off@BarracudaTestBot")
+        if(messageText == $"/off")
         {
             MutedInChats.Add(chatId);
-        } else if(messageText == "/on@BarracudaTestBot")
+        } else if(messageText == $"/on")
         {
             MutedInChats.Remove(chatId);
         }
         if (MutedInChats.Contains(chatId)) return;
 
-        var checkedWord = new WordChecker().GetAnswerByCommand(messageText);
+        var checkedWord = _wordChecker.GetAnswerByCommand(messageText);
 
         if (!string.IsNullOrEmpty(checkedWord))
         {
@@ -89,13 +99,12 @@ public class BotService
             return;
         }
 
-        var stickerSender = new StickerChecker();
-        if (stickerSender.IsStickerCommand(messageText))
+        if (_stickerChecker.IsStickerCommand(messageText))
         {
             await botClient.DeleteMessageAsync(chatId, message.MessageId);
             await botClient.SendStickerAsync(
                 chatId: chatId,
-                sticker: stickerSender.GetStickerLink(messageText),
+                sticker: _stickerChecker.GetStickerLink(messageText),
                 replyToMessageId: message.ReplyToMessage?.MessageId,
                 cancellationToken: cancellationToken);
             return;

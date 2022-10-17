@@ -1,4 +1,5 @@
-﻿using BarracudaTestBot.Services;
+﻿using BarracudaTestBot.Checkers;
+using BarracudaTestBot.Services;
 
 internal class Program
 {
@@ -15,7 +16,10 @@ internal class Program
         });
         builder.Services.AddControllers();
 
+        builder.Services.AddHostedService<PingService>();
         builder.Services.AddSingleton<BotService>();
+        builder.Services.AddSingleton<WordChecker>();
+        builder.Services.AddSingleton<StickerChecker>();
 
         var app = builder.Build();
 

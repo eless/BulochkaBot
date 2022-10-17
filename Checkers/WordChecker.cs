@@ -7,20 +7,20 @@ namespace BarracudaTestBot.Checkers;
 
 public class WordChecker
 {
-    private Dictionary<Regex, Func<string>> _commands = new Dictionary<Regex, Func<string>>
+    protected Dictionary<Regex, Func<string>> Commands => new Dictionary<Regex, Func<string>>
     {
         [new Regex("^Слава Україні!$")] = () => "*Героям слава\\!*",
         [new Regex("^шо по русні", RegexOptions.IgnoreCase)] = () => "*русні пизда\\!*",
         [new Regex("путін", RegexOptions.IgnoreCase)] = () => new PutinGenerator().GenerateName(),
-        [new Regex("^/losses$")] = () => new Losses().GetData().Result,
+        [new Regex($"^/losses")] = () => new Losses().GetData().Result,
     };
 
     public string GetAnswerByCommand(string command)
     {
-        var key = _commands.Keys.Where(c => c.IsMatch(command)).FirstOrDefault();
+        var commands = Commands.Where(c => c.Key.IsMatch(command));
         
-        if (key == null) return string.Empty;
+        if (commands.Count() == 0) return string.Empty;
 
-        return _commands[key].Invoke();
+        return commands.First().Value.Invoke();
     }
 }
