@@ -10,6 +10,7 @@ public class WordChecker
     private Dictionary<Regex, Func<string>> _commands = new Dictionary<Regex, Func<string>>
     {
         [new Regex("^Слава Україні!$")] = () => "*Героям слава\\!*",
+        [new Regex("^шо по русні$", RegexOptions.IgnoreCase)] = () => "*пизда русні\\!*",
         [new Regex("путін", RegexOptions.IgnoreCase)] = () => new PutinGenerator().GenerateName(),
         [new Regex("^/losses$")] = () => new Losses().GetData().Result,
     };
