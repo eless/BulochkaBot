@@ -9,7 +9,7 @@ namespace BarracudaTestBot
         public static int GetRandomNumber(int from, int to) => new Random().Next(from, to);
 
     }
-
+    
     public class PingService : BackgroundService
     {
         private int pingPeriod = 1000 * 60 * 2;
