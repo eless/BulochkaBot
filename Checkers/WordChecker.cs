@@ -1,5 +1,4 @@
-﻿
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using PtnGen;
 using RusLosses;
 
@@ -12,6 +11,7 @@ public class WordChecker
         [new Regex("^Слава Україні!$")] = () => "*Героям слава\\!*",
         [new Regex("^шо по русні", RegexOptions.IgnoreCase)] = () => "*русні пизда\\!*",
         [new Regex("путін", RegexOptions.IgnoreCase)] = () => new PutinGenerator().GenerateName(),
+        [new Regex("булочка", RegexOptions.IgnoreCase)] = () => "мурняв",
         [new Regex($"^/losses")] = () => new Losses().GetData().Result,
     };
 
