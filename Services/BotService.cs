@@ -86,17 +86,20 @@ public class BotService
 
         var checkedWord = _wordChecker.GetAnswerByCommand(messageText);
 
-        if (!string.IsNullOrEmpty(checkedWord))
+        if (checkedWord != null)
         {
-            try
+            foreach (var commandText in checkedWord)
             {
-                await SendText(message.ReplyToMessage?.MessageId, chatId, checkedWord, cancellationToken);
+                try
+                {
+                    await SendText(message.ReplyToMessage?.MessageId, chatId, commandText, cancellationToken);
+                }
+                catch (ApiRequestException)
+                {
+                    await SendText(message.ReplyToMessage?.MessageId, chatId, commandText, cancellationToken, null);
+                }
+
             }
-            catch (ApiRequestException)
-            {
-                await SendText(message.ReplyToMessage?.MessageId, chatId, checkedWord, cancellationToken, null);
-            }
-            return;
         }
 
         if (_stickerChecker.IsStickerCommand(messageText))
