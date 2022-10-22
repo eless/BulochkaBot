@@ -1,21 +1,23 @@
 ﻿using System.Text.RegularExpressions;
+using BarracudaTestBot.Services;
 using PtnGen;
 using RusLosses;
+using Telegram.Bot.Types.Enums;
 
 namespace BarracudaTestBot.Checkers;
 
 public class WordChecker
 {
-    protected Dictionary<Regex, Func<string>> Commands => new Dictionary<Regex, Func<string>>
+    protected Dictionary<Regex, Func<CommandAnswer>> Commands => new Dictionary<Regex, Func<CommandAnswer>>
     {
-        [new Regex("^Слава Україні!$")] = () => "*Героям слава\\!*",
-        [new Regex("шо по русні", RegexOptions.IgnoreCase)] = () => "*русні пизда\\!*",
-        [new Regex("путін", RegexOptions.IgnoreCase)] = () => new PutinGenerator().GenerateName(),
-        [new Regex("булочка", RegexOptions.IgnoreCase)] = () => "мурняв",
-        [new Regex($"^/losses")] = () => new Losses().GetData().Result,
+        [new Regex("^Слава Україні!$")] = () => new CommandAnswer("*Героям слава\\!*", ParseMode.MarkdownV2),
+        [new Regex("шо по русні", RegexOptions.IgnoreCase)] = () => new CommandAnswer("*русні пизда\\!*", ParseMode.MarkdownV2),
+        [new Regex("путін", RegexOptions.IgnoreCase)] = () => new CommandAnswer(new PutinGenerator().GenerateName(), ParseMode.Markdown),
+        [new Regex("булочка", RegexOptions.IgnoreCase)] = () => new CommandAnswer("мурняв", ParseMode.Markdown),
+        [new Regex($"^/losses")] = () => new CommandAnswer(new Losses().GetData().Result, ParseMode.MarkdownV2),
     };
 
-    public IEnumerable<string> GetAnswerByCommand(string command)
+    public IEnumerable<CommandAnswer> GetAnswerByCommand(string command)
     {
         var commands = Commands.Where(c => c.Key.IsMatch(command));
 

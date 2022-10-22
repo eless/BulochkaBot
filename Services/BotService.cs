@@ -84,22 +84,20 @@ public class BotService
         }
         if (MutedInChats.Contains(chatId)) return;
 
-        var checkedWord = _wordChecker.GetAnswerByCommand(messageText);
+        var commandAnswers = _wordChecker.GetAnswerByCommand(messageText);
 
-        if (checkedWord != null)
+        if (commandAnswers != null)
         {
-            foreach (var commandText in checkedWord)
-            {
-                try
-                {
-                    await SendText(message.ReplyToMessage?.MessageId, chatId, commandText, cancellationToken);
-                }
-                catch (ApiRequestException)
-                {
-                    await SendText(message.ReplyToMessage?.MessageId, chatId, commandText, cancellationToken, null);
-                }
-
-            }
+            commandAnswers
+                .AsParallel()
+                .ForAll(
+                    async (commandText) =>
+                        await SendText(
+                            message.ReplyToMessage?.MessageId,
+                            chatId,
+                            commandText.Text,
+                            cancellationToken,
+                            commandText.ParseMode));
         }
 
         if (_stickerChecker.IsStickerCommand(messageText))
