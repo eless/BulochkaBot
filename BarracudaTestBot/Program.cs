@@ -25,6 +25,7 @@ internal class Program
 
         var app = builder.Build();
 
+        app.UseExceptionHandler("/Error");
         app.UseDeveloperExceptionPage();
         app.UseStaticFiles();
 
