@@ -13,7 +13,7 @@ namespace FunctionApp
     {
         public override void ConfigureAppConfiguration(IFunctionsConfigurationBuilder builder)
         {
-            string cs = Environment.GetEnvironmentVariable("TelegramToken");
+            string cs = Environment.GetEnvironmentVariable("ConnectionString");
             builder.ConfigurationBuilder.AddEnvironmentVariables(cs);
         }
 

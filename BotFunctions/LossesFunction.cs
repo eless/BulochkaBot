@@ -22,7 +22,7 @@ namespace BotFunctions
         }
 
         [FunctionName("LossesFunction")]
-        public async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"LossesFunction executed at: {DateTime.Now}");
 
