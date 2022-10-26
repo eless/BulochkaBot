@@ -9,8 +9,7 @@ namespace BarracudaTestBot.Services;
 
 public class BotService
 {
-    private static DateTime _dateOfStart = DateTime.UtcNow;
-
+    private readonly DateTime _dateOfStart = DateTime.UtcNow;
     private readonly string _token;
     private readonly TelegramBotClient _botClient;
     private readonly WordChecker _wordChecker;

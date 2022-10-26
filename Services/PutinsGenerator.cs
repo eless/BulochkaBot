@@ -1,7 +1,8 @@
 
 using BarracudaTestBot;
 
-namespace PtnGen {
+namespace BarracudaTestBot.Services
+{
     public class PutinGenerator
     {
         private List<string> wordLast = new List<string>() {
@@ -59,7 +60,7 @@ namespace PtnGen {
             int adjectivesCount = Utilities.GetRandomNumber(1, 3);
             Random rng = new Random();
             builder.Append(string.Join(" ", adjectives.OrderBy(x => rng.Next()).Take(adjectivesCount)));
-            builder.Append($" { wordLast[Utilities.GetRandomNumber(0, wordLast.Count())] }");
+            builder.Append($" {wordLast[Utilities.GetRandomNumber(0, wordLast.Count())]}");
             return builder.ToString();
         }
     }

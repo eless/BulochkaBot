@@ -20,6 +20,8 @@ internal class Program
         builder.Services.AddSingleton<BotService>();
         builder.Services.AddSingleton<WordChecker>();
         builder.Services.AddSingleton<StickerChecker>();
+        builder.Services.AddSingleton<RussianLossesService>();
+        builder.Services.AddSingleton<PutinGenerator>();
 
         var app = builder.Build();
 
