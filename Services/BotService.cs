@@ -83,7 +83,7 @@ public class BotService
         }
         if (MutedInChats.Contains(chatId)) return;
 
-        var commandAnswers = _wordChecker.GetAnswerByCommand(messageText);
+        var commandAnswers = _wordChecker.GetAnswersByCommand(messageText);
 
         if (commandAnswers != null)
         {

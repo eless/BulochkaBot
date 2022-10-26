@@ -21,7 +21,7 @@ public class WordChecker
         [new Regex($"^/losses")] = () => new CommandAnswer(_russianLossesService.GetData().Result, ParseMode.MarkdownV2),
     };
 
-    public IEnumerable<CommandAnswer> GetAnswerByCommand(string command)
+    public IEnumerable<CommandAnswer> GetAnswersByCommand(string command)
     {
         var commands = Commands.Where(c => c.Key.IsMatch(command));
 
