@@ -5,7 +5,7 @@ VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BarracudaTestBot", "BarracudaTestBot.csproj", "{FA5D480E-41F8-4B60-A422-C4EEB1F836D9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotFunctions", "BotFunctions\BotFunctions.csproj", "{6D2810CC-E595-480A-A699-78344B2614E8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotFunctions", "..\BotFunctions\BotFunctions.csproj", "{3F0085B8-21DE-48AA-B01A-B44A058C7C49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{FA5D480E-41F8-4B60-A422-C4EEB1F836D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA5D480E-41F8-4B60-A422-C4EEB1F836D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA5D480E-41F8-4B60-A422-C4EEB1F836D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6D2810CC-E595-480A-A699-78344B2614E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6D2810CC-E595-480A-A699-78344B2614E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6D2810CC-E595-480A-A699-78344B2614E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6D2810CC-E595-480A-A699-78344B2614E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F0085B8-21DE-48AA-B01A-B44A058C7C49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F0085B8-21DE-48AA-B01A-B44A058C7C49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F0085B8-21DE-48AA-B01A-B44A058C7C49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F0085B8-21DE-48AA-B01A-B44A058C7C49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

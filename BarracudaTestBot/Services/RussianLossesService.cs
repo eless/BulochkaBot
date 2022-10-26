@@ -64,9 +64,9 @@ public class RussianLossesService
         try
         {
             var losses = await new HttpClient()
-                .GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest")!;
+                .GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
 
-            if (string.IsNullOrEmpty(losses.message) || losses.message != "The data were fetched successfully.")
+            if (string.IsNullOrEmpty(losses!.message) || losses.message != "The data were fetched successfully.")
             {
                 return string.Empty;
             }

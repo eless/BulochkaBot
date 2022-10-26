@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /appsettings.Local.json
 /.vscode
+/BarracudaTestBot/appsettings.Local.json
