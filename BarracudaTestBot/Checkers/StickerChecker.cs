@@ -27,7 +27,7 @@ public class StickerChecker
     {
         _stickersByCommand.TryGetValue(command, out List<string> stickerLinks);
         var rnd = new Random();
-        var stickerLink = stickerLinks?.OrderBy(s => rnd.Next()).First();
-        return stickerLink ?? String.Empty;
+        var stickerLink = stickerLinks?.OrderBy(s => rnd.Next()).FirstOrDefault();
+        return stickerLink ?? string.Empty;
     }
 }
