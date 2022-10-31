@@ -21,6 +21,8 @@ public class StickerChecker
                 }
     };
 
+    public IEnumerable<string> GetCommands() => _stickersByCommand.Keys;
+
     public bool IsStickerCommand(string command) => _stickersByCommand.ContainsKey(command);
 
     public string GetStickerLink(string command)

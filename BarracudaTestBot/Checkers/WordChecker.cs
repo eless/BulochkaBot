@@ -6,11 +6,12 @@ namespace BarracudaTestBot.Checkers;
 
 public class WordChecker
 {
+    private readonly StickerChecker _stickerChecker;
     private RussianLossesService _russianLossesService;
     private PutinGenerator _putinGenerator;
 
-    public WordChecker(RussianLossesService russianLossesService, PutinGenerator putinGenerator) =>
-        (_russianLossesService, _putinGenerator) = (russianLossesService, putinGenerator);
+    public WordChecker(RussianLossesService russianLossesService, PutinGenerator putinGenerator, StickerChecker stickerChecker) =>
+        (_russianLossesService, _putinGenerator, _stickerChecker) = (russianLossesService, putinGenerator, stickerChecker);
 
     protected Dictionary<Regex, Func<CommandAnswer>> Commands => new Dictionary<Regex, Func<CommandAnswer>>
     {
@@ -19,6 +20,7 @@ public class WordChecker
         [new Regex("путін", RegexOptions.IgnoreCase)] = () => new CommandAnswer(_putinGenerator.GenerateName(), ParseMode.Markdown),
         [new Regex("булочка", RegexOptions.IgnoreCase)] = () => new CommandAnswer("мурняв", ParseMode.Markdown),
         [new Regex($"^/losses")] = () => new CommandAnswer(_russianLossesService.GetData().Result, ParseMode.MarkdownV2),
+        [new Regex($"^/stickers")] = () => new CommandAnswer(string.Join(Environment.NewLine, _stickerChecker.GetCommands()), ParseMode.MarkdownV2),
     };
 
     public IEnumerable<CommandAnswer> GetAnswersByCommand(string command)

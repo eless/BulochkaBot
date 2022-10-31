@@ -21,7 +21,8 @@ public class BotService
     {
         ["off"] = "вимкнути бота в чаті",
         ["on"] = "ввімкнути бота в чаті",
-        ["losses"] = "втрати підарасні на сьогодні"
+        ["losses"] = "втрати підарасні на сьогодні",
+        ["stickers"] = "команди стікерів"
     };
 
     public BotService(IConfiguration configuration,
