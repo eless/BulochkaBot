@@ -61,6 +61,19 @@ public class BotService
         System.Diagnostics.Trace.WriteLine($"Start listening for @{me.Username}");
     }
 
+    public async Task SendLosses()
+    {
+        if (_wordChecker.GetAnswersByCommand("/losses").FirstOrDefault() is not { } message)
+        {
+            return;
+        }
+        await _botClient.SendTextMessageAsync(
+            chatId: -1001344803304,
+            text: message.Text,
+            parseMode: message.ParseMode,
+            cancellationToken: CancellationToken.None);
+    }
+
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         if (update.Message?.Date < _dateOfStart) return;
