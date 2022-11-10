@@ -2,20 +2,23 @@
 {
     public class PingService : BackgroundService
     {
-        private int pingPeriod = 1000 * 60 * 10;
+        private int _pingPeriodMin = 10;
+
         private string urlToPing = "https://barracudatestbot.azurewebsites.net";
         private BotService _botService;
 
         public PingService(BotService botService) => _botService = botService;
 
+        private int PingPeriod => 1000 * 60 * _pingPeriodMin;
+
         protected override async Task ExecuteAsync(CancellationToken cts)
         {
             var start = new TimeSpan(7, 0, 0);
-            var end = new TimeSpan(7, pingPeriod + 2, 0);
+            var end = new TimeSpan(7, _pingPeriodMin + 2, 0);
             using var client = new HttpClient();
             while (!cts.IsCancellationRequested)
             {
-                await Task.Delay(pingPeriod, cts);
+                await Task.Delay(PingPeriod, cts);
                 try
                 {
                     var content = await client.GetStringAsync(urlToPing);
