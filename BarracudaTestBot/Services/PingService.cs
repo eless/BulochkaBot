@@ -3,6 +3,7 @@
     public class PingService : BackgroundService
     {
         private int _pingPeriodMin = 10;
+        private int _pingHourUtc = 8;
 
         private string urlToPing = "https://barracudatestbot.azurewebsites.net";
         private BotService _botService;
@@ -13,8 +14,8 @@
 
         protected override async Task ExecuteAsync(CancellationToken cts)
         {
-            var start = new TimeSpan(7, 0, 0);
-            var end = new TimeSpan(7, _pingPeriodMin + 2, 0);
+            var start = new TimeSpan(_pingHourUtc, 0, 0);
+            var end = new TimeSpan(_pingHourUtc, _pingPeriodMin + 2, 0);
             using var client = new HttpClient();
             while (!cts.IsCancellationRequested)
             {
@@ -31,7 +32,7 @@
                 }
                 catch (HttpRequestException hre)
                 {
-                    Console.WriteLine(hre);
+                    System.Diagnostics.Trace.WriteLine(hre);
                 }
             }
         }
