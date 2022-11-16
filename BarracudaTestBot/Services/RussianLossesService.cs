@@ -94,15 +94,15 @@ public class RussianLossesService
                 ["atgm_srbm_systems"] = "ОТРК",
             };
 
-            List<string> stats = new List<string>();
+            var stats = new List<string>();
             foreach (PropertyInfo stat in losses.data.stats.GetType().GetProperties()) {
                 stats.Add($"{statNameDictionary[stat.Name]}: *{stat.GetValue(losses.data.stats)}*");
             }
 
-            List<string> increase = new List<string>();
+            var increase = new List<string>();
             foreach (PropertyInfo stat in losses.data.increase.GetType().GetProperties()) {
                 var change = Convert.ToInt32(stat.GetValue(losses.data.increase));
-                var str = new StringBuilder("");
+                var str = new StringBuilder();
                 if (change != 0) {
                     str.Append($" \\+ \\(*{change}*\\)");
                     if (stat.Name == "personnel_units") {
