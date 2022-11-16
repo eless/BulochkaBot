@@ -74,52 +74,53 @@ public class RussianLossesService
             {
                 return string.Empty;
             }
-            var date = losses.data.date.ToString("dd/MM/yyyy");
+            var date = losses.data.date.ToString("dd MM yyyy");
             var builder = new StringBuilder($"Втрати на {date}{Environment.NewLine}");
 
             Dictionary<string, string> statNameDictionary = new Dictionary<string, string> {
-                ["personnel_units"] = "русні:",
-                ["tanks"] = "скрєпних танків:",
-                ["armoured_fighting_vehicles"] = "брон. машин:",
-                ["artillery_systems"] = "арт. систем:",
-                ["mlrs"] = "РСЗВ:",
-                ["aa_warfare_systems"] = "аналоговнєтних ппо:",
-                ["planes"] = "вєчнольотних літаків:",
-                ["helicopters"] = "гелікоптерів:",
-                ["vehicles_fuel_tanks"] = "авто та цистерни:",
-                ["warships_cutters"] = "кораблі/катери:",
-                ["cruise_missiles"] = "крилатих ракет:",
-                ["uav_systems"] = "БПЛА:",
-                ["special_military_equip"] = "спецтехніка:",
-                ["atgm_srbm_systems"] = "ОТРК:",
+                ["personnel_units"] = "русні",
+                ["tanks"] = "скрєпних танків",
+                ["armoured_fighting_vehicles"] = "брон\\. машин",
+                ["artillery_systems"] = "арт\\. систем",
+                ["mlrs"] = "РСЗВ",
+                ["aa_warfare_systems"] = "аналоговнєтних ппо",
+                ["planes"] = "вєчнольотних літаків",
+                ["helicopters"] = "гелікоптерів",
+                ["vehicles_fuel_tanks"] = "авто та цистерни",
+                ["warships_cutters"] = "кораблі/катери",
+                ["cruise_missiles"] = "крилатих ракет",
+                ["uav_systems"] = "БПЛА",
+                ["special_military_equip"] = "спецтехніка",
+                ["atgm_srbm_systems"] = "ОТРК",
             };
 
             List<string> stats = new List<string>();
             foreach (PropertyInfo stat in losses.data.stats.GetType().GetProperties()) {
-                stats.Append($"{statNameDictionary[stat.Name]}: *{stat.GetValue(losses.data.stats)}*");
+                stats.Add($"{statNameDictionary[stat.Name]}: *{stat.GetValue(losses.data.stats)}*");
             }
 
             List<string> increase = new List<string>();
             foreach (PropertyInfo stat in losses.data.increase.GetType().GetProperties()) {
                 var change = Convert.ToInt32(stat.GetValue(losses.data.increase));
-                string str = "";
+                var str = new StringBuilder("");
                 if (change != 0) {
-                    str.Concat($" \\+ \\(*{change}*\\)");
+                    str.Append($" \\+ \\(*{change}*\\)");
                     if (stat.Name == "personnel_units") {
                         if (change >= GOOD_RUSSIANS_COUNT_LIMIT_3) {
-                            str.Concat("🤖💪👊");
+                            str.Append("🤖💪👊");
                         } else if (change >= GOOD_RUSSIANS_COUNT_LIMIT_2) {
-                            str.Concat("🥳💪");
+                            str.Append("🥳💪");
                         } else if (change >= GOOD_RUSSIANS_COUNT_LIMIT_1) {
-                            str.Concat("🎉");
+                            str.Append("🎉");
                         }
                     } else if (stat.Name == "tanks") {
                         if (change >= RUSSIAN_TANKS_LIMIT_1) {
+                            str.Append("💥🙉");
                             // TODO: send gif of falling tank
                         }
                     }
                 }
-                increase.Append(str);
+                increase.Add(str.ToString());
             }
 
             for (int i = 0; i < stats.Count(); i++) {
