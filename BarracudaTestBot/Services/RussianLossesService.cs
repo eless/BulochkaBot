@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Reflection;
 using System.Text;
+using System.Globalization;
 
 namespace BarracudaTestBot.Services;
 
@@ -74,7 +75,7 @@ public class RussianLossesService
             {
                 return string.Empty;
             }
-            var date = losses.data.date.ToString("dd MM yyyy");
+            var date = losses.data.date.ToString("dd/MM/yy", CultureInfo.CreateSpecificCulture("en-US"));
             var builder = new StringBuilder($"Втрати на {date}{Environment.NewLine}");
 
             Dictionary<string, string> statNameDictionary = new Dictionary<string, string> {
