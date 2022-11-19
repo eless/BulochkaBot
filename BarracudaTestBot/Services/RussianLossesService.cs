@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Reflection;
 using System.Text;
+using System.Globalization;
 
 namespace BarracudaTestBot.Services;
 
@@ -58,7 +59,11 @@ public class Stats
 
 public class RussianLossesService
 {
-    private const int GOOD_RUSSIANS_COUNT_LIMIT = 450;
+    private const int GOOD_RUSSIANS_COUNT_LIMIT_1 = 500;
+    private const int GOOD_RUSSIANS_COUNT_LIMIT_2 = 750;
+    private const int GOOD_RUSSIANS_COUNT_LIMIT_3 = 1000;
+    private const int RUSSIAN_TANKS_LIMIT_1 = 20;
+
     public async Task<string> GetData()
     {
         try
@@ -70,44 +75,58 @@ public class RussianLossesService
             {
                 return string.Empty;
             }
-            var date = losses.data.date.ToString("dd/MM/yyyy");
+            var date = losses.data.date.ToString("dd/MM/yy", CultureInfo.CreateSpecificCulture("en-US"));
             var builder = new StringBuilder($"Втрати на {date}{Environment.NewLine}");
 
-            List<string> statName = new List<string>() {
-                "русні", "скрєпних танків", "бойових броньованих машин", "артилерійських систем", "РСЗВ", "аналоговнєтних пво",
-                "літаків", "гелікоптерів", "БПЛА оперативно\\-тактичного рівня", "крилатих ракет", "кораблі\\/катери",
-                "автомобільної техніки та автоцистерн", "спеціальна техніка"
+            Dictionary<string, string> statNameDictionary = new Dictionary<string, string> {
+                ["personnel_units"] = "русні",
+                ["tanks"] = "скрєпних танків",
+                ["armoured_fighting_vehicles"] = "брон\\. машин",
+                ["artillery_systems"] = "арт\\. систем",
+                ["mlrs"] = "РСЗВ",
+                ["aa_warfare_systems"] = "аналоговнєтних ппо",
+                ["planes"] = "вєчнольотних літаків",
+                ["helicopters"] = "гелікоптерів",
+                ["vehicles_fuel_tanks"] = "авто та цистерни",
+                ["warships_cutters"] = "кораблі/катери",
+                ["cruise_missiles"] = "крилатих ракет",
+                ["uav_systems"] = "БПЛА",
+                ["special_military_equip"] = "спецтехніка",
+                ["atgm_srbm_systems"] = "ОТРК",
             };
 
-            List<int> stats = new List<int>();
-            foreach (PropertyInfo stat in losses.data.stats.GetType().GetProperties())
-            {
-                var res = stat.GetValue(losses.data.stats);
-                stats.Add(Convert.ToInt32(res));
+            var stats = new List<string>();
+            foreach (PropertyInfo stat in losses.data.stats.GetType().GetProperties()) {
+                stats.Add($"{statNameDictionary[stat.Name]}: *{stat.GetValue(losses.data.stats)}*");
             }
 
-            List<int> increase = new List<int>();
-            foreach (PropertyInfo stat in losses.data.increase.GetType().GetProperties())
-            {
-                var res = stat.GetValue(losses.data.increase);
-                increase.Add(Convert.ToInt32(res));
-            }
-
-            for (int i = 0; i < statName.Count(); i++)
-            {
-                builder.Append($"{statName[i]}: *{stats[i]}*");
-                if (increase[i] > 0)
-                {
-                    builder.Append($" \\+ \\(*{increase[i]}*\\)");
-                }
-                if (statName[i] == "русні")
-                {
-                    builder.Append(" мальчіков в трусіках");
-                    if (increase[i] > GOOD_RUSSIANS_COUNT_LIMIT)
-                    {
-                        builder.Append("🎉");
+            var increase = new List<string>();
+            foreach (PropertyInfo stat in losses.data.increase.GetType().GetProperties()) {
+                var change = Convert.ToInt32(stat.GetValue(losses.data.increase));
+                var str = new StringBuilder();
+                if (change != 0) {
+                    str.Append($" \\+ \\(*{change}*\\)");
+                    if (stat.Name == "personnel_units") {
+                        if (change >= GOOD_RUSSIANS_COUNT_LIMIT_3) {
+                            str.Append("🤖💪👊");
+                        } else if (change >= GOOD_RUSSIANS_COUNT_LIMIT_2) {
+                            str.Append("🥳💪");
+                        } else if (change >= GOOD_RUSSIANS_COUNT_LIMIT_1) {
+                            str.Append("🎉");
+                        }
+                    } else if (stat.Name == "tanks") {
+                        if (change >= RUSSIAN_TANKS_LIMIT_1) {
+                            str.Append("💥🙉");
+                            // TODO: send gif of falling tank
+                        }
                     }
                 }
+                increase.Add(str.ToString());
+            }
+
+            for (int i = 0; i < stats.Count(); i++) {
+                builder.Append(stats[i]);
+                builder.Append(increase[i]);
                 builder.AppendLine();
             }
             return builder.ToString();
