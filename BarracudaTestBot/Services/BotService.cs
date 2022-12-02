@@ -4,6 +4,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot;
 using BarracudaTestBot.Checkers;
 using Telegram.Bot.Exceptions;
+using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace BarracudaTestBot.Services;
 
@@ -61,17 +63,13 @@ public class BotService
         System.Diagnostics.Trace.WriteLine($"Start listening for @{me.Username}");
     }
 
-    public async Task SendLosses()
+    public void SendLosses()
     {
-        if (_wordChecker.GetAnswersByCommand("/losses").FirstOrDefault() is not { } message)
+        if (_wordChecker.GetAnswersByCommand("/losses") is not { } messages)
         {
             return;
         }
-        await _botClient.SendTextMessageAsync(
-            chatId: -1001344803304,
-            text: message.Text,
-            parseMode: message.ParseMode,
-            cancellationToken: CancellationToken.None);
+        SendCommandAnswers(messages, CancellationToken.None);
     }
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -101,24 +99,7 @@ public class BotService
 
         if (commandAnswers != null)
         {
-            commandAnswers
-                .AsParallel()
-                .ForAll(
-                    async (commandText) =>
-                    {
-                        if (_stickerChecker.IsStickerCommand(commandText.Text))
-                            await botClient.SendStickerAsync(
-                                chatId: chatId,
-                                sticker: _stickerChecker.GetStickerLink(commandText.Text),
-                                cancellationToken: cancellationToken);
-                        else
-                            await SendText(
-                                message.ReplyToMessage?.MessageId,
-                                chatId,
-                                commandText.Text,
-                                cancellationToken,
-                                commandText.ParseMode);
-                    });
+            SendCommandAnswers(commandAnswers, cancellationToken, message);
         }
 
         if (_stickerChecker.IsStickerCommand(messageText))
@@ -140,11 +121,31 @@ public class BotService
 
         var answer = message.ReplyToMessage?.MessageId != null ? $"у відповідь: " : "";
 
-        var text = $"@{message.From.Username} {answer}{correctMessageText}";
+        var text = $"@{message?.From?.Username} {answer}{correctMessageText}";
 
         await botClient.DeleteMessageAsync(chatId, message.MessageId);
         await SendText(message.ReplyToMessage?.MessageId, chatId, text, cancellationToken, null);
     }
+
+    private void SendCommandAnswers(IEnumerable<CommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null) =>
+        commandAnswers
+                .AsParallel()
+                .ForAll(
+                    async (commandText) =>
+                    {
+                        if (_stickerChecker.IsStickerCommand(commandText.Text))
+                            await _botClient.SendStickerAsync(
+                                chatId: message?.Chat?.Id ?? -1001344803304,
+                                sticker: _stickerChecker.GetStickerLink(commandText.Text),
+                                cancellationToken: cancellationToken);
+                        else
+                            await SendText(
+                                message?.ReplyToMessage?.MessageId,
+                                message?.Chat?.Id ?? -1001344803304,
+                                commandText.Text,
+                                cancellationToken,
+                                commandText.ParseMode);
+                    });
 
     private async Task<Message> SendText(int? replyTo, long chatId, string text,
         CancellationToken cancellationToken, ParseMode? parseMode = ParseMode.MarkdownV2) =>
