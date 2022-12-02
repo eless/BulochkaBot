@@ -27,7 +27,7 @@
                     var now = DateTime.UtcNow.TimeOfDay;
                     if (now > start && now < end)
                     {
-                        await _botService.SendLosses();
+                        _botService.SendLosses();
                     }
                 }
                 catch (HttpRequestException hre)
