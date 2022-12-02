@@ -21,8 +21,10 @@ public class WordChecker
         [new Regex("булочка", RegexOptions.IgnoreCase)] = (commands) => commands.Add(new CommandAnswer("мурняв", ParseMode.Markdown)),
         [new Regex($"^/losses")] = (commands) =>
         {
-            commands.Add(new CommandAnswer(_russianLossesService.GetData().Result, ParseMode.MarkdownV2));
-            commands.Add(new CommandAnswer("русні пизда", ParseMode.Markdown));
+            var losses = _russianLossesService.GetData().Result;
+            commands.Add(new CommandAnswer(losses.Item1, ParseMode.MarkdownV2));
+            if(!string.IsNullOrEmpty(losses.Item2))
+                commands.Add(new CommandAnswer(losses.Item2, ParseMode.Markdown));
         },
         [new Regex($"^/stickers")] = (commands) => commands.Add(new CommandAnswer(string.Join(Environment.NewLine, _stickerChecker.GetCommands()), ParseMode.MarkdownV2)),
     };

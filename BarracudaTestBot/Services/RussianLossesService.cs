@@ -64,16 +64,17 @@ public class RussianLossesService
     private const int GOOD_RUSSIANS_COUNT_LIMIT_3 = 1000;
     private const int RUSSIAN_TANKS_LIMIT_1 = 20;
 
-    public async Task<string> GetData()
+    public async Task<(string, string)> GetData()
     {
         try
         {
+            var sticker = string.Empty;
             var losses = await new HttpClient()
                 .GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
 
             if (string.IsNullOrEmpty(losses!.message) || losses.message != "The data were fetched successfully.")
             {
-                return string.Empty;
+                return (string.Empty, sticker);
             }
             var date = losses.data.date.ToString("dd/MM/yy", CultureInfo.CreateSpecificCulture("en-US"));
             var builder = new StringBuilder($"Втрати на {date}{Environment.NewLine}");
@@ -117,7 +118,7 @@ public class RussianLossesService
                     } else if (stat.Name == "tanks") {
                         if (change >= RUSSIAN_TANKS_LIMIT_1) {
                             str.Append("💥🙉");
-                            // TODO: send gif of falling tank
+                            sticker = "русні пизда";
                         }
                     }
                 }
@@ -129,12 +130,12 @@ public class RussianLossesService
                 builder.Append(increase[i]);
                 builder.AppendLine();
             }
-            return builder.ToString();
+            return (builder.ToString(), sticker);
         }
         catch (HttpRequestException hre)
         {
             Console.WriteLine(hre);
-            return string.Empty;
+            return (string.Empty, string.Empty);
         }
     }
 }
