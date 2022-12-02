@@ -105,12 +105,20 @@ public class BotService
                 .AsParallel()
                 .ForAll(
                     async (commandText) =>
-                        await SendText(
-                            message.ReplyToMessage?.MessageId,
-                            chatId,
-                            commandText.Text,
-                            cancellationToken,
-                            commandText.ParseMode));
+                    {
+                        if (_stickerChecker.IsStickerCommand(commandText.Text))
+                            await botClient.SendStickerAsync(
+                                chatId: chatId,
+                                sticker: _stickerChecker.GetStickerLink(commandText.Text),
+                                cancellationToken: cancellationToken);
+                        else
+                            await SendText(
+                                message.ReplyToMessage?.MessageId,
+                                chatId,
+                                commandText.Text,
+                                cancellationToken,
+                                commandText.ParseMode);
+                    });
         }
 
         if (_stickerChecker.IsStickerCommand(messageText))
