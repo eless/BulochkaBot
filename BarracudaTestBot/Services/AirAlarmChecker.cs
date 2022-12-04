@@ -24,8 +24,8 @@ namespace BarracudaTestBot.Services
                 var alert = KyivAlertActive;
                 using var client = new HttpClient();
                 var content = await client.GetStringAsync("https://t.me/s/air_alert_ua");
-                
-                StringReader reader = new StringReader(content);
+
+                using StringReader reader = new StringReader(content);
                 while(true)
                 {
                     string line = reader.ReadLine();
