@@ -2,10 +2,10 @@
 {
     public class AirAlarmMonitor
     {
-        AirAlarmChecker _checker;
-        AirAlarmGenericNotifier _notifier;
+        private AirAlarmChecker _checker;
+        private AirAlarmGenericNotifier _notifier;
 
-        AirAlarmMonitor(AirAlarmChecker checker, AirAlarmGenericNotifier notifier)
+        public AirAlarmMonitor(AirAlarmChecker checker, AirAlarmGenericNotifier notifier)
         {
             _checker = checker;
             _notifier = notifier;

@@ -6,6 +6,10 @@ namespace BarracudaTestBot.Services
 {
     public class AirAlarmChecker
     {
+        public AirAlarmChecker()
+        {
+
+        }
         private static bool KyivAlertActive = false;
 
         public enum AlertStatus : ushort

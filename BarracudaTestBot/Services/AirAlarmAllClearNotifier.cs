@@ -6,7 +6,7 @@ namespace BarracudaTestBot.Services
     {
         private TelegramBotClient _botClient;
         private AirAlarmStickerSelector _stickerSelector;
-        AirAlarmAllClearNotifier(ITelegramBotClient botClient, AirAlarmStickerSelector stickerSelector)
+        public AirAlarmAllClearNotifier(ITelegramBotClient botClient, AirAlarmStickerSelector stickerSelector)
         {
             _botClient = (TelegramBotClient) botClient;
             _stickerSelector = stickerSelector;
@@ -18,7 +18,7 @@ namespace BarracudaTestBot.Services
             {
                 await _botClient.SendStickerAsync(
                     chatId: -1001344803304,
-                    sticker: _stickerSelector.GetSticker());
+                    sticker: _stickerSelector.GetAllClearSticker());
                 // TODO: add text with alert duration
             }
             catch

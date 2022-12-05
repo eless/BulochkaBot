@@ -9,7 +9,7 @@ namespace BarracudaTestBot.Services
     {
         private TelegramBotClient _botClient;
         private AirAlarmStickerSelector _stickerSelector;
-        AirAlarmAlertNotifier(ITelegramBotClient botClient, AirAlarmStickerSelector stickerSelector)
+        public AirAlarmAlertNotifier(ITelegramBotClient botClient, AirAlarmStickerSelector stickerSelector)
         {
             _botClient = (TelegramBotClient) botClient;
             _stickerSelector = stickerSelector;
@@ -21,7 +21,7 @@ namespace BarracudaTestBot.Services
             {
                 await _botClient.SendStickerAsync(
                     chatId: -1001344803304,
-                    sticker: _stickerSelector.GetSticker());
+                    sticker: _stickerSelector.GetAlertSticker());
                 // TODO: add text yobana rusnia or get it from some generator 
                 // maybe add info about time between current allert and last all clear
             }

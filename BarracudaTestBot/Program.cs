@@ -25,12 +25,13 @@ internal class Program
         builder.Services.AddSingleton<StickerChecker>();
         builder.Services.AddSingleton<RussianLossesService>();
         builder.Services.AddSingleton<PutinGenerator>();
-        builder.Services.AddSingleton<AirAlarmMonitor>();
         builder.Services.AddSingleton<AirAlarmChecker>();
-        builder.Services.AddSingleton<AirAlarmGenericNotifier>();
         builder.Services.AddSingleton<AirAlarmAlertNotifier>();
         builder.Services.AddSingleton<AirAlarmAllClearNotifier>();
-        
+        builder.Services.AddSingleton<AirAlarmGenericNotifier>();
+        builder.Services.AddSingleton<AirAlarmMonitor>();
+        builder.Services.AddSingleton<AirAlarmStickerSelector>();
+
 
         var app = builder.Build();
 
@@ -48,7 +49,13 @@ internal class Program
         var botService = app.Services.GetService<BotService>();
 
         using var cts = new CancellationTokenSource();
-        botService.Start(cts);
+        if (botService != null && cts != null)
+        {
+            _ = botService.Start(cts);
+        }
+        
+        var airAlarmMonitor = app.Services.GetService<AirAlarmMonitor>();
+        airAlarmMonitor?.Start();
 
         System.Diagnostics.Trace.WriteLine($"app starting at {startDate}");
         app.Run();
