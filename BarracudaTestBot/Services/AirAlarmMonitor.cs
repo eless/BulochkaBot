@@ -1,9 +1,10 @@
 ﻿namespace BarracudaTestBot.Services
 {
-    public class AirAlarmMonitor
+    public class AirAlarmMonitor : BackgroundService
     {
         private AirAlarmChecker _checker;
         private AirAlarmGenericNotifier _notifier;
+        private readonly TimeSpan _alarmCheckPeriod = TimeSpan.FromSeconds(5);
 
         public AirAlarmMonitor(AirAlarmChecker checker, AirAlarmGenericNotifier notifier)
         {
@@ -11,12 +12,12 @@
             _notifier = notifier;
         }
 
-        public async void Start()
+        protected override async Task ExecuteAsync(CancellationToken cts)
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
-
-            while (await timer.WaitForNextTickAsync())
+            using var timer = new PeriodicTimer(_alarmCheckPeriod);
+            while (!cts.IsCancellationRequested)
             {
+                await timer.WaitForNextTickAsync();
                 var result = _checker.Check().Result;
                 _notifier.notify(result);
                 // TODO: maybe add report at midnight about all alerts this day, and wish a good night.

@@ -29,7 +29,7 @@ internal class Program
         builder.Services.AddSingleton<AirAlarmAlertNotifier>();
         builder.Services.AddSingleton<AirAlarmAllClearNotifier>();
         builder.Services.AddSingleton<AirAlarmGenericNotifier>();
-        builder.Services.AddSingleton<AirAlarmMonitor>();
+        builder.Services.AddHostedService<AirAlarmMonitor>();
         builder.Services.AddSingleton<AirAlarmStickerSelector>();
 
 
@@ -53,9 +53,6 @@ internal class Program
         {
             _ = botService.Start(cts);
         }
-        
-        var airAlarmMonitor = app.Services.GetService<AirAlarmMonitor>();
-        airAlarmMonitor?.Start();
 
         System.Diagnostics.Trace.WriteLine($"app starting at {startDate}");
         app.Run();

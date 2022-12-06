@@ -16,7 +16,7 @@ namespace BarracudaTestBot.Services
 
         }
 
-        private List<String> alertStickers = new List<String> {
+        private readonly List<String> _alertStickers = new List<String> {
             "CAACAgIAAxkBAAEBY3xjSeEE269IAAGUAwAB65HFXDSyZV7tAALoIAACUmeJSJLkdz0x4VKBKgQ",
             "CAACAgIAAxkBAAEBY4RjSeFQxyJpVnlEpBqQsulZ0C7j-wACwx8AAixxiEjoHSQ48whpRyoE",
             "CAACAgIAAxkBAAEBY4xjSeGAkKBg1DYdukPboYTkgCgfBQACWBoAAg_ckUgeLguTYm4kMSoE",
@@ -24,7 +24,7 @@ namespace BarracudaTestBot.Services
             "CAACAgIAAxkBAAEBgGBjjlzhe4RWJ6ECMOC205vbmQ2XlAACGRgAAo1z2Uo25GNgK3tadCsE"
         };
 
-        private List<String> allClearStickers = new List<String> {
+        private readonly List<String> _allClearStickers = new List<String> {
             "CAACAgIAAxkBAAEBY4BjSeE1Cw88viOoFf4Mkk0Dv44o_wAC_RwAAuURiEggQmSHj7Cb4yoE",
             "CAACAgIAAxkBAAEBY4hjSeFoCJfPgNuXN-1Dksc0vOjMkQACix8AAgwRiUjPeFGsKPjPISoE",
             "CAACAgIAAxkBAAEBY5BjSeG2NTerE9_gd3MIuI70xmHnkwACZyEAAuegiEimsxDXD0wemyoE",
@@ -32,18 +32,18 @@ namespace BarracudaTestBot.Services
             "CAACAgIAAxkBAAEBgGRjjlz54IsngAJP6DUu3I_FK1TFzQACkxUAAo7_4UpAXuQxTq2p0ysE"
         };
 
-        private int lastAlertStickerIndex = 0;
+        private int _lastAlertStickerIndex = 0;
 
         public string GetAlertSticker()
         {
             var random = new Random();
-            lastAlertStickerIndex = random.Next(alertStickers.Count);
-            return alertStickers[lastAlertStickerIndex];
+            _lastAlertStickerIndex = random.Next(_alertStickers.Count);
+            return _alertStickers[_lastAlertStickerIndex];
         }
 
         public string GetAllClearSticker()
         {
-            return allClearStickers[lastAlertStickerIndex];
+            return _allClearStickers[_lastAlertStickerIndex];
         }
     }
 }

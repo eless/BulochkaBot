@@ -10,7 +10,7 @@ namespace BarracudaTestBot.Services
         {
 
         }
-        private static bool KyivAlertActive = false;
+        private static bool _KyivAlertActive = false;
 
         public enum AlertStatus : ushort
         {
@@ -25,14 +25,14 @@ namespace BarracudaTestBot.Services
             var status = AlertStatus.NotChanged;
             try
             {
-                var alert = KyivAlertActive;
+                var alert = _KyivAlertActive;
                 using var client = new HttpClient();
                 var content = await client.GetStringAsync("https://t.me/s/air_alert_ua");
 
                 using StringReader reader = new StringReader(content);
                 while(true)
                 {
-                    string line = reader.ReadLine();
+                    var line = reader.ReadLine();
                     if (string.IsNullOrEmpty(line))
                     {
                         break;
@@ -47,10 +47,10 @@ namespace BarracudaTestBot.Services
                     }
                 }
 
-                if (KyivAlertActive != alert)
+                if (_KyivAlertActive != alert)
                 {
-                    KyivAlertActive = alert;
-                    status = KyivAlertActive ? AlertStatus.Active : AlertStatus.AllClear;
+                    _KyivAlertActive = alert;
+                    status = _KyivAlertActive ? AlertStatus.Active : AlertStatus.AllClear;
                 }
             }
             catch (HttpRequestException hre)
