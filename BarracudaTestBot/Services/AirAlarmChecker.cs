@@ -12,7 +12,7 @@ namespace BarracudaTestBot.Services
         }
         private static bool _KyivAlertActive = false;
 
-        public enum AlertStatus : ushort
+        public enum AlertStatus
         {
             NotChanged,
             Active,

@@ -51,7 +51,7 @@ internal class Program
         using var cts = new CancellationTokenSource();
         if (botService != null && cts != null)
         {
-            _ = botService.Start(cts);
+            botService.Start(cts);
         }
 
         System.Diagnostics.Trace.WriteLine($"app starting at {startDate}");
