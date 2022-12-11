@@ -12,8 +12,7 @@ namespace BarracudaTestBot.Services;
 public class BotService
 {
     private readonly DateTime _dateOfStart = DateTime.UtcNow;
-    private readonly string _token;
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
     private readonly WordChecker _wordChecker;
     private readonly StickerChecker _stickerChecker;
 
@@ -27,11 +26,9 @@ public class BotService
         ["stickers"] = "команди стікерів"
     };
 
-    public BotService(IConfiguration configuration,
-        WordChecker wordChecker, StickerChecker stickerChecker)
+    public BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient)
     {
-        _token = configuration.GetValue<string>("TelegramToken");
-        _botClient = new TelegramBotClient(_token);
+        _botClient = botClient;
         _wordChecker = wordChecker;
         _stickerChecker = stickerChecker;
     }

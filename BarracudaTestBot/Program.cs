@@ -1,5 +1,6 @@
 ﻿using BarracudaTestBot.Checkers;
 using BarracudaTestBot.Services;
+using Telegram.Bot;
 
 internal class Program
 {
@@ -16,12 +17,21 @@ internal class Program
         });
         builder.Services.AddControllers();
 
+        var token = builder.Configuration.GetValue<string>("TelegramToken");
+        builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token));
         builder.Services.AddHostedService<PingService>();
         builder.Services.AddSingleton<BotService>();
         builder.Services.AddSingleton<WordChecker>();
         builder.Services.AddSingleton<StickerChecker>();
         builder.Services.AddSingleton<RussianLossesService>();
         builder.Services.AddSingleton<PutinGenerator>();
+        builder.Services.AddSingleton<AirAlarmChecker>();
+        builder.Services.AddSingleton<AirAlarmAlertNotifier>();
+        builder.Services.AddSingleton<AirAlarmAllClearNotifier>();
+        builder.Services.AddSingleton<AirAlarmGenericNotifier>();
+        builder.Services.AddHostedService<AirAlarmMonitor>();
+        builder.Services.AddSingleton<AirAlarmStickerSelector>();
+
 
         var app = builder.Build();
 
@@ -39,7 +49,10 @@ internal class Program
         var botService = app.Services.GetService<BotService>();
 
         using var cts = new CancellationTokenSource();
-        botService.Start(cts);
+        if (botService != null && cts != null)
+        {
+            botService.Start(cts);
+        }
 
         System.Diagnostics.Trace.WriteLine($"app starting at {startDate}");
         app.Run();
