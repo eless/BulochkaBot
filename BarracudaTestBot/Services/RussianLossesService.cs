@@ -65,16 +65,16 @@ public class Stats
 public class RussianLossesData
 {
     public string units = string.Empty;
-    public List<string> stickers = new List<string>();
-    public List<string> animations = new List<string>();
+    public List<string> stickers = new ();
+    public List<string> animations = new ();
 }
 
 public class Limit
 {
     public int limit { get; set; }
     public string smile { get; set; }
-    public List<string> animation = new List<string>();
-    public List<string> sticker = new List<string>();
+    public List<string> animation = new ();
+    public List<string> sticker = new ();
 }
 
 public class RussianLossesService
@@ -156,21 +156,21 @@ public class RussianLossesService
                     limits.TryGetValue(stat.Name, out List<Limit> limitsList);
                     if (limitsList != null)
                     {
-                        for (int i = 0; i < limitsList.Count; i++)
+                        foreach (var item in limitsList)
                         {
-                            if (change >= limitsList[i].limit)
+                            if (change >= item.limit)
                             {
-                                str.Append(limitsList[i].smile);
+                                str.Append(item.smile);
                                 var random = new Random();
-                                if (limitsList[i].animation.Any())
+                                if (item.animation.Any())
                                 {
-                                    int index = random.Next(limitsList[i].animation.Count);
-                                    data.animations.Add(limitsList[i].animation[index]);
+                                    int index = random.Next(item.animation.Count);
+                                    data.animations.Add(item.animation[index]);
                                 }
-                                if (limitsList[i].sticker.Any())
+                                if (item.sticker.Any())
                                 {
-                                    int index = random.Next(limitsList[i].sticker.Count);
-                                    data.stickers.Add(limitsList[i].sticker[index]);
+                                    int index = random.Next(item.sticker.Count);
+                                    data.stickers.Add(item.sticker[index]);
                                 }
                                 break;
                             }

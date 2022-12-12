@@ -29,14 +29,14 @@ namespace BarracudaTestBot.Services
                 _reportTime = _reportTime.AddDays(1);
             }
             var delay = _reportTime - now;
-            await Task.Delay(delay);
+            await Task.Delay(delay, cts);
             using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromDays(1));
 
             while (!cts.IsCancellationRequested)
             {
                 System.Diagnostics.Trace.WriteLine("RussianLossesDailyReport");
-                var losses = _russianLossesService.GetData().Result;
-                _russianLossesSender.Send(losses);
+                var losses = await _russianLossesService.GetData();
+                await _russianLossesSender.Send(losses);
                 await timer.WaitForNextTickAsync();
             }
         }
