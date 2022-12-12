@@ -4,6 +4,9 @@ using System.Text;
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types;
+using System.Collections.ObjectModel;
+using System.Numerics;
+using static System.Net.WebRequestMethods;
 
 namespace BarracudaTestBot.Services;
 
@@ -70,20 +73,41 @@ public class Limit
 {
     public int limit { get; set; }
     public string smile { get; set; }
-    public string animation { get; set; }
-    public string sticker { get; set; }
+    public List<string> animation = new List<string>();
+    public List<string> sticker = new List<string>();
 }
 
 public class RussianLossesService
 {
-    private readonly List<Limit> _goodRussiansLimit = new List<Limit>() {
-        new Limit() { limit = 1500, smile = "🔥🔥🔥 💪👊💪 💥💥💥", sticker = "CAACAgIAAxkBAAEBZWljTVG3uiQ6EpmPJNLPCMQYqgHKpAAC0R0AAtz9eUiSMtzqMNIUsioE" },
-        new Limit() { limit = 1000, smile = "🤖💪👊" },
-        new Limit() { limit = 750, smile = "🥳💪" },
-        new Limit() { limit = 500, smile = "🎉" },
-    };
-    private readonly List<Limit> _russianTanksLimit = new List<Limit>() {
-        new Limit() { limit = 20, smile = "💥🙉", animation = "https://media.giphy.com/media/AgaXMCnoSbNHa/giphy.gif" },
+    private readonly Dictionary<string, List<Limit>> limits = new Dictionary<string, List<Limit>>
+    {
+        ["personnel_units"] = new List<Limit>() {
+            new Limit() { limit = 1500, smile = "🔥🔥🔥 💪👊💪 💥💥💥", sticker = {"CAACAgIAAxkBAAEBZWljTVG3uiQ6EpmPJNLPCMQYqgHKpAAC0R0AAtz9eUiSMtzqMNIUsioE"} },
+            new Limit() { limit = 1000, smile = "🤖💪👊" , animation = {"https://media2.giphy.com/media/2w6I6nCyf5rmy5SHBy/giphy.gif", "https://media2.giphy.com/media/Oj7yTCLSZjSt2JMwi2/giphy.gif"} },
+            new Limit() { limit = 750, smile = "🥳💪", animation = {"https://media.tenor.com/1OX3Uc7IgkMAAAAM/oof-military.gif"} },
+            new Limit() { limit = 500, smile = "🎉", animation = { "https://64.media.tumblr.com/1d112324be4bf9251352b3dd4d9546df/c9a1751f8d44ebf2-74/s400x600/df1fc5490d6a4b9ecf50cd25ebac0cd48e038fce.gif" } },
+        },
+        ["tanks"] = new List<Limit>() {
+            new Limit() { limit = 20, smile = "💥🙉", animation = {"https://media.giphy.com/media/AgaXMCnoSbNHa/giphy.gif" } },
+        },
+        ["planes"] = new List<Limit>() {
+            new Limit() { limit = 1, smile = "🔥", animation = {"https://thumbs.gfycat.com/BaggySarcasticCarpenterant-max-1mb.gif", "CgACAgIAAxkBAAEBhZ1jl6GT6PHvhErUV6D4CNtO3Se38gAClCQAAuCTwEi7wz132XMHDCsE" } },
+        },
+        ["warships_cutters"] = new List<Limit>() {
+            new Limit() { limit = 1, smile = "🔥", animation = {"https://media.tenor.com/bhAAVRUg_igAAAAM/fail-as-a-team-team-fail.gif" } },
+        },
+        ["uav_systems"] = new List<Limit>() {
+            new Limit() { limit = 7, smile = "🔥", animation = {"https://media.tenor.com/aDV3obO5gAIAAAAd/plane-toy-plane.gif", "https://thumbs.gfycat.com/GiddyQuickCardinal-max-1mb.gif" } },
+        },
+        ["helicopters"] = new List<Limit>() {
+            new Limit() { limit = 3, smile = "🔥", animation = { "https://i.gifer.com/HGjG.gif", "https://i.gifer.com/3Y7s.gif" } },
+        },
+        ["mlrs"] = new List<Limit>() {
+            new Limit() { limit = 2, smile = "🔥", animation = { "https://i.ucrazy.ru/files/pics/2014.07/1404321857_3.gif" } },
+        },
+        ["artillery_systems"] = new List<Limit>() {
+            new Limit() { limit = 5, smile = "🔥", animation = { "https://i.makeagif.com/media/2-27-2021/2nmnM0.gif" } },
+        },
     };
 
     public async Task<RussianLossesData> GetData()
@@ -129,31 +153,24 @@ public class RussianLossesService
                 var str = new StringBuilder();
                 if (change != 0) {
                     str.Append($" \\+ \\(*{change}*\\)");
-                    if (stat.Name == "personnel_units") {
-                        for(int i = 0; i < _goodRussiansLimit.Count; i++)
+                    limits.TryGetValue(stat.Name, out List<Limit> limitsList);
+                    if (limitsList != null)
+                    {
+                        for (int i = 0; i < limitsList.Count; i++)
                         {
-                            if (change >= _goodRussiansLimit[i].limit)
+                            if (change >= limitsList[i].limit)
                             {
-                                str.Append(_goodRussiansLimit[i].smile);
-                                if (!string.IsNullOrEmpty(_goodRussiansLimit[i].animation))
+                                str.Append(limitsList[i].smile);
+                                var random = new Random();
+                                if (limitsList[i].animation.Any())
                                 {
-                                    data.animations.Add(_goodRussiansLimit[i].animation);
-                                } else if (!string.IsNullOrEmpty(_goodRussiansLimit[i].sticker))
-                                {
-                                    data.stickers.Add(_goodRussiansLimit[i].sticker);
+                                    int index = random.Next(limitsList[i].animation.Count);
+                                    data.animations.Add(limitsList[i].animation[index]);
                                 }
-                                break;
-                            }
-                        }
-                    } else if (stat.Name == "tanks") {
-                        for (int i = 0; i < _russianTanksLimit.Count; i++)
-                        {
-                            if (change >= _russianTanksLimit[i].limit)
-                            {
-                                str.Append(_russianTanksLimit[i].smile);
-                                if (!string.IsNullOrEmpty(_russianTanksLimit[i].animation))
+                                if (limitsList[i].sticker.Any())
                                 {
-                                    data.animations.Add(_russianTanksLimit[i].animation);
+                                    int index = random.Next(limitsList[i].sticker.Count);
+                                    data.stickers.Add(limitsList[i].sticker[index]);
                                 }
                                 break;
                             }

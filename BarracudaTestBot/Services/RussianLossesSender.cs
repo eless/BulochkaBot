@@ -2,6 +2,7 @@
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace BarracudaTestBot.Services
 {
@@ -20,7 +21,8 @@ namespace BarracudaTestBot.Services
             {
                 await _botClient.SendTextMessageAsync(
                     chatId: -1001344803304,
-                    text: data.units);
+                    text: data.units,
+                    parseMode: ParseMode.MarkdownV2);
             }
             foreach(var sticker in data.stickers) {
                 if (!string.IsNullOrEmpty(sticker))
