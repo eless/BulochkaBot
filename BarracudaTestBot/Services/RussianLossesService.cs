@@ -2,6 +2,8 @@ using System.Text.Json;
 using System.Reflection;
 using System.Text;
 using System.Globalization;
+using Microsoft.AspNetCore.Mvc;
+using Telegram.Bot.Types;
 
 namespace BarracudaTestBot.Services;
 
@@ -57,24 +59,44 @@ public class Stats
     public int atgm_srbm_systems { get; set; }
 }
 
+public class RussianLossesData
+{
+    public string units = string.Empty;
+    public List<string> stickers = new List<string>();
+    public List<string> animations = new List<string>();
+}
+
+public class Limit
+{
+    public int limit { get; set; }
+    public string smile { get; set; }
+    public string animation { get; set; }
+    public string sticker { get; set; }
+}
+
 public class RussianLossesService
 {
-    private const int GOOD_RUSSIANS_COUNT_LIMIT_1 = 500;
-    private const int GOOD_RUSSIANS_COUNT_LIMIT_2 = 750;
-    private const int GOOD_RUSSIANS_COUNT_LIMIT_3 = 1000;
-    private const int RUSSIAN_TANKS_LIMIT_1 = 20;
+    private readonly List<Limit> _goodRussiansLimit = new List<Limit>() {
+        new Limit() { limit = 1500, smile = "🔥🔥🔥 💪👊💪 💥💥💥", sticker = "CAACAgIAAxkBAAEBZWljTVG3uiQ6EpmPJNLPCMQYqgHKpAAC0R0AAtz9eUiSMtzqMNIUsioE" },
+        new Limit() { limit = 1000, smile = "🤖💪👊" },
+        new Limit() { limit = 750, smile = "🥳💪" },
+        new Limit() { limit = 500, smile = "🎉" },
+    };
+    private readonly List<Limit> _russianTanksLimit = new List<Limit>() {
+        new Limit() { limit = 20, smile = "💥🙉", animation = "https://media.giphy.com/media/AgaXMCnoSbNHa/giphy.gif" },
+    };
 
-    public async Task<(string, string)> GetData()
+    public async Task<RussianLossesData> GetData()
     {
+        RussianLossesData data = new RussianLossesData();
         try
         {
-            var sticker = string.Empty;
             var losses = await new HttpClient()
                 .GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
 
             if (string.IsNullOrEmpty(losses!.message) || losses.message != "The data were fetched successfully.")
             {
-                return (string.Empty, sticker);
+                return data;
             }
             var date = losses.data.date.ToString("dd/MM/yy", CultureInfo.CreateSpecificCulture("en-US"));
             var builder = new StringBuilder($"Втрати на {date}{Environment.NewLine}");
@@ -108,17 +130,33 @@ public class RussianLossesService
                 if (change != 0) {
                     str.Append($" \\+ \\(*{change}*\\)");
                     if (stat.Name == "personnel_units") {
-                        if (change >= GOOD_RUSSIANS_COUNT_LIMIT_3) {
-                            str.Append("🤖💪👊");
-                        } else if (change >= GOOD_RUSSIANS_COUNT_LIMIT_2) {
-                            str.Append("🥳💪");
-                        } else if (change >= GOOD_RUSSIANS_COUNT_LIMIT_1) {
-                            str.Append("🎉");
+                        for(int i = 0; i < _goodRussiansLimit.Count; i++)
+                        {
+                            if (change >= _goodRussiansLimit[i].limit)
+                            {
+                                str.Append(_goodRussiansLimit[i].smile);
+                                if (!string.IsNullOrEmpty(_goodRussiansLimit[i].animation))
+                                {
+                                    data.animations.Add(_goodRussiansLimit[i].animation);
+                                } else if (!string.IsNullOrEmpty(_goodRussiansLimit[i].sticker))
+                                {
+                                    data.stickers.Add(_goodRussiansLimit[i].sticker);
+                                }
+                                break;
+                            }
                         }
                     } else if (stat.Name == "tanks") {
-                        if (change >= RUSSIAN_TANKS_LIMIT_1) {
-                            str.Append("💥🙉");
-                            sticker = "русні пизда";
+                        for (int i = 0; i < _russianTanksLimit.Count; i++)
+                        {
+                            if (change >= _russianTanksLimit[i].limit)
+                            {
+                                str.Append(_russianTanksLimit[i].smile);
+                                if (!string.IsNullOrEmpty(_russianTanksLimit[i].animation))
+                                {
+                                    data.animations.Add(_russianTanksLimit[i].animation);
+                                }
+                                break;
+                            }
                         }
                     }
                 }
@@ -130,12 +168,13 @@ public class RussianLossesService
                 builder.Append(increase[i]);
                 builder.AppendLine();
             }
-            return (builder.ToString(), sticker);
+            data.units = builder.ToString();
+            return data;
         }
         catch (HttpRequestException hre)
         {
             Console.WriteLine(hre);
-            return (string.Empty, string.Empty);
+            return data;
         }
     }
 }

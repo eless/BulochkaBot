@@ -60,15 +60,6 @@ public class BotService
         System.Diagnostics.Trace.WriteLine($"Start listening for @{me.Username}");
     }
 
-    public void SendLosses()
-    {
-        if (_wordChecker.GetAnswersByCommand("/losses") is not { } messages)
-        {
-            return;
-        }
-        SendCommandAnswers(messages, CancellationToken.None);
-    }
-
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         if (update.Message?.Date < _dateOfStart) return;
