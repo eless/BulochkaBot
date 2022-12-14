@@ -9,9 +9,10 @@ public class WordChecker
     private readonly StickerChecker _stickerChecker;
     private RussianLossesService _russianLossesService;
     private PutinGenerator _putinGenerator;
+    private RussianLossesSender _russianLossesSender;
 
-    public WordChecker(RussianLossesService russianLossesService, PutinGenerator putinGenerator, StickerChecker stickerChecker) =>
-        (_russianLossesService, _putinGenerator, _stickerChecker) = (russianLossesService, putinGenerator, stickerChecker);
+    public WordChecker(RussianLossesService russianLossesService, PutinGenerator putinGenerator, StickerChecker stickerChecker, RussianLossesSender russianLossesSender) =>
+        (_russianLossesService, _putinGenerator, _stickerChecker, _russianLossesSender) = (russianLossesService, putinGenerator, stickerChecker, russianLossesSender);
 
     protected Dictionary<Regex, Action<List<CommandAnswer>>> Commands => new Dictionary<Regex, Action<List<CommandAnswer>>>
     {
@@ -22,9 +23,7 @@ public class WordChecker
         [new Regex($"^/losses")] = (commands) =>
         {
             var losses = _russianLossesService.GetData().Result;
-            commands.Add(new CommandAnswer(losses.Item1, ParseMode.MarkdownV2));
-            if(!string.IsNullOrEmpty(losses.Item2))
-                commands.Add(new CommandAnswer(losses.Item2, ParseMode.Markdown));
+            _russianLossesSender.Send(losses);
         },
         [new Regex($"^/stickers")] = (commands) => commands.Add(new CommandAnswer(string.Join(Environment.NewLine, _stickerChecker.GetCommands()), ParseMode.MarkdownV2)),
     };

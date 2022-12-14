@@ -31,6 +31,8 @@ internal class Program
         builder.Services.AddSingleton<AirAlarmGenericNotifier>();
         builder.Services.AddHostedService<AirAlarmMonitor>();
         builder.Services.AddSingleton<AirAlarmStickerSelector>();
+        builder.Services.AddHostedService<RussianLossesDailyReport>();
+        builder.Services.AddSingleton<RussianLossesSender>();
 
 
         var app = builder.Build();

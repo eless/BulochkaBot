@@ -2,6 +2,11 @@ using System.Text.Json;
 using System.Reflection;
 using System.Text;
 using System.Globalization;
+using Microsoft.AspNetCore.Mvc;
+using Telegram.Bot.Types;
+using System.Collections.ObjectModel;
+using System.Numerics;
+using static System.Net.WebRequestMethods;
 
 namespace BarracudaTestBot.Services;
 
@@ -57,24 +62,65 @@ public class Stats
     public int atgm_srbm_systems { get; set; }
 }
 
+public class RussianLossesData
+{
+    public string units = string.Empty;
+    public List<string> stickers = new ();
+    public List<string> animations = new ();
+}
+
+public class Limit
+{
+    public int limit { get; set; }
+    public string smile { get; set; }
+    public List<string> animation = new ();
+    public List<string> sticker = new ();
+}
+
 public class RussianLossesService
 {
-    private const int GOOD_RUSSIANS_COUNT_LIMIT_1 = 500;
-    private const int GOOD_RUSSIANS_COUNT_LIMIT_2 = 750;
-    private const int GOOD_RUSSIANS_COUNT_LIMIT_3 = 1000;
-    private const int RUSSIAN_TANKS_LIMIT_1 = 20;
-
-    public async Task<(string, string)> GetData()
+    private readonly Dictionary<string, List<Limit>> limits = new Dictionary<string, List<Limit>>
     {
+        ["personnel_units"] = new List<Limit>() {
+            new Limit() { limit = 1500, smile = "🔥🔥🔥 💪👊💪 💥💥💥", sticker = {"CAACAgIAAxkBAAEBZWljTVG3uiQ6EpmPJNLPCMQYqgHKpAAC0R0AAtz9eUiSMtzqMNIUsioE"} },
+            new Limit() { limit = 1000, smile = "🤖💪👊" , animation = {"https://media2.giphy.com/media/2w6I6nCyf5rmy5SHBy/giphy.gif", "https://media2.giphy.com/media/Oj7yTCLSZjSt2JMwi2/giphy.gif"} },
+            new Limit() { limit = 750, smile = "🥳💪", animation = {"https://media.tenor.com/1OX3Uc7IgkMAAAAM/oof-military.gif"} },
+            new Limit() { limit = 500, smile = "🎉", animation = { "https://64.media.tumblr.com/1d112324be4bf9251352b3dd4d9546df/c9a1751f8d44ebf2-74/s400x600/df1fc5490d6a4b9ecf50cd25ebac0cd48e038fce.gif" } },
+        },
+        ["tanks"] = new List<Limit>() {
+            new Limit() { limit = 20, smile = "💥🙉", animation = {"https://media.giphy.com/media/AgaXMCnoSbNHa/giphy.gif" } },
+        },
+        ["planes"] = new List<Limit>() {
+            new Limit() { limit = 1, smile = "🔥", animation = {"https://thumbs.gfycat.com/BaggySarcasticCarpenterant-max-1mb.gif", "CgACAgIAAxkBAAEBhZ1jl6GT6PHvhErUV6D4CNtO3Se38gAClCQAAuCTwEi7wz132XMHDCsE" } },
+        },
+        ["warships_cutters"] = new List<Limit>() {
+            new Limit() { limit = 1, smile = "🔥", animation = {"https://media.tenor.com/bhAAVRUg_igAAAAM/fail-as-a-team-team-fail.gif" } },
+        },
+        ["uav_systems"] = new List<Limit>() {
+            new Limit() { limit = 7, smile = "🔥", animation = {"https://media.tenor.com/aDV3obO5gAIAAAAd/plane-toy-plane.gif", "https://thumbs.gfycat.com/GiddyQuickCardinal-max-1mb.gif" } },
+        },
+        ["helicopters"] = new List<Limit>() {
+            new Limit() { limit = 3, smile = "🔥", animation = { "https://i.gifer.com/HGjG.gif", "https://i.gifer.com/3Y7s.gif" } },
+        },
+        ["mlrs"] = new List<Limit>() {
+            new Limit() { limit = 2, smile = "🔥", animation = { "https://i.ucrazy.ru/files/pics/2014.07/1404321857_3.gif" } },
+        },
+        ["artillery_systems"] = new List<Limit>() {
+            new Limit() { limit = 5, smile = "🔥", animation = { "https://i.makeagif.com/media/2-27-2021/2nmnM0.gif" } },
+        },
+    };
+
+    public async Task<RussianLossesData> GetData()
+    {
+        RussianLossesData data = new RussianLossesData();
         try
         {
-            var sticker = string.Empty;
             var losses = await new HttpClient()
                 .GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
 
             if (string.IsNullOrEmpty(losses!.message) || losses.message != "The data were fetched successfully.")
             {
-                return (string.Empty, sticker);
+                return data;
             }
             var date = losses.data.date.ToString("dd/MM/yy", CultureInfo.CreateSpecificCulture("en-US"));
             var builder = new StringBuilder($"Втрати на {date}{Environment.NewLine}");
@@ -107,18 +153,27 @@ public class RussianLossesService
                 var str = new StringBuilder();
                 if (change != 0) {
                     str.Append($" \\+ \\(*{change}*\\)");
-                    if (stat.Name == "personnel_units") {
-                        if (change >= GOOD_RUSSIANS_COUNT_LIMIT_3) {
-                            str.Append("🤖💪👊");
-                        } else if (change >= GOOD_RUSSIANS_COUNT_LIMIT_2) {
-                            str.Append("🥳💪");
-                        } else if (change >= GOOD_RUSSIANS_COUNT_LIMIT_1) {
-                            str.Append("🎉");
-                        }
-                    } else if (stat.Name == "tanks") {
-                        if (change >= RUSSIAN_TANKS_LIMIT_1) {
-                            str.Append("💥🙉");
-                            sticker = "русні пизда";
+                    limits.TryGetValue(stat.Name, out List<Limit> limitsList);
+                    if (limitsList != null)
+                    {
+                        foreach (var item in limitsList)
+                        {
+                            if (change >= item.limit)
+                            {
+                                str.Append(item.smile);
+                                var random = new Random();
+                                if (item.animation.Any())
+                                {
+                                    int index = random.Next(item.animation.Count);
+                                    data.animations.Add(item.animation[index]);
+                                }
+                                if (item.sticker.Any())
+                                {
+                                    int index = random.Next(item.sticker.Count);
+                                    data.stickers.Add(item.sticker[index]);
+                                }
+                                break;
+                            }
                         }
                     }
                 }
@@ -130,12 +185,13 @@ public class RussianLossesService
                 builder.Append(increase[i]);
                 builder.AppendLine();
             }
-            return (builder.ToString(), sticker);
+            data.units = builder.ToString();
+            return data;
         }
         catch (HttpRequestException hre)
         {
             Console.WriteLine(hre);
-            return (string.Empty, string.Empty);
+            return data;
         }
     }
 }
