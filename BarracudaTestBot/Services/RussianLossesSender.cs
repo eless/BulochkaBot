@@ -14,7 +14,7 @@ namespace BarracudaTestBot.Services
         {
             _botClient = botClient;
         }
-
+        // debug chat id: 512242748
         public async Task Send(RussianLossesData data)
         {
             if (!string.IsNullOrEmpty(data.units))
