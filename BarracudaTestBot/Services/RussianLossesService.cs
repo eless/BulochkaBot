@@ -7,10 +7,6 @@ using Telegram.Bot.Types;
 using System.Collections.ObjectModel;
 using System.Numerics;
 using static System.Net.WebRequestMethods;
-using System.Collections.Generic;
-using System.IO;
-using System.Drawing;
-using System;
 
 namespace BarracudaTestBot.Services;
 
@@ -129,22 +125,22 @@ public class RussianLossesService
             new Limit() { smile = "🔥", animation = { "https://64.media.tumblr.com/1d112324be4bf9251352b3dd4d9546df/c9a1751f8d44ebf2-74/s400x600/df1fc5490d6a4b9ecf50cd25ebac0cd48e038fce.gif",
                                                       "https://media.tenor.com/1OX3Uc7IgkMAAAAM/oof-military.gif", "https://media2.giphy.com/media/2w6I6nCyf5rmy5SHBy/giphy.gif",
                                                       "https://media2.giphy.com/media/Oj7yTCLSZjSt2JMwi2/giphy.gif"} },
-        ["tanks"] = new Limit() { smile = "💥", animation = { "https://media.giphy.com/media/AgaXMCnoSbNHa/giphy.gif" } },
+        ["tanks"] = new Limit { smile = "💥", animation = { "https://media.giphy.com/media/AgaXMCnoSbNHa/giphy.gif" } },
         ["armoured_fighting_vehicles"] = new Limit() { smile = "🔥", animation = { "" } },
-        ["artillery_systems"] = new Limit() { smile = "🔥", animation = { "https://i.makeagif.com/media/2-27-2021/2nmnM0.gif" } },
-        ["mlrs"] = new Limit() { smile = "🔥", animation = { "https://i.ucrazy.ru/files/pics/2014.07/1404321857_3.gif" } },
-        ["aa_warfare_systems"] = new Limit() { smile = "🔥", animation = { "https://i.makeagif.com/media/9-25-2015/eLgg4N.gif" } },
-        ["planes"] = new Limit() { smile = "🔥", animation = { "https://thumbs.gfycat.com/BaggySarcasticCarpenterant-max-1mb.gif",
+        ["artillery_systems"] = new Limit { smile = "🔥", animation = { "https://i.makeagif.com/media/2-27-2021/2nmnM0.gif" } },
+        ["mlrs"] = new Limit { smile = "🔥", animation = { "https://i.ucrazy.ru/files/pics/2014.07/1404321857_3.gif" } },
+        ["aa_warfare_systems"] = new Limit { smile = "🔥", animation = { "https://i.makeagif.com/media/9-25-2015/eLgg4N.gif" } },
+        ["planes"] = new Limit { smile = "🔥", animation = { "https://thumbs.gfycat.com/BaggySarcasticCarpenterant-max-1mb.gif",
                                                               "https://media.giphy.com/media/7SIcw2yfQdfeJgP29f/giphy-downsized-large.gif",
                                                               "https://media.giphy.com/media/Qtz7JZFyhhEXaRk7kT/giphy.gif"} },
-        ["helicopters"] = new Limit() { smile = "🔥", animation = { "https://i.gifer.com/HGjG.gif", "https://i.gifer.com/3Y7s.gif" } },
-        ["vehicles_fuel_tanks"] = new Limit() { smile = "🔥"},
-        ["warships_cutters"] = new Limit() { smile = "🔥", animation = {"https://media.tenor.com/bhAAVRUg_igAAAAM/fail-as-a-team-team-fail.gif" } },
-        ["cruise_missiles"] = new Limit() { smile = "🔥"},
-        ["uav_systems"] = new Limit() { smile = "🔥", animation = {"https://media.tenor.com/aDV3obO5gAIAAAAd/plane-toy-plane.gif", 
+        ["helicopters"] = new Limit { smile = "🔥", animation = { "https://i.gifer.com/HGjG.gif", "https://i.gifer.com/3Y7s.gif" } },
+        ["vehicles_fuel_tanks"] = new Limit { smile = "🔥"},
+        ["warships_cutters"] = new Limit { smile = "🔥", animation = {"https://media.tenor.com/bhAAVRUg_igAAAAM/fail-as-a-team-team-fail.gif" } },
+        ["cruise_missiles"] = new Limit { smile = "🔥"},
+        ["uav_systems"] = new Limit { smile = "🔥", animation = {"https://media.tenor.com/aDV3obO5gAIAAAAd/plane-toy-plane.gif", 
                                                                    "https://thumbs.gfycat.com/GiddyQuickCardinal-max-1mb.gif" } },
-        ["special_military_equip"] = new Limit() { smile = "🔥"},
-        ["atgm_srbm_systems"] = new Limit() { smile = "🔥"},
+        ["special_military_equip"] = new Limit { smile = "🔥"},
+        ["atgm_srbm_systems"] = new Limit { smile = "🔥"},
     };
 
     private async void setLimits(Root losses)
@@ -153,12 +149,12 @@ public class RussianLossesService
         previouslosses.Add(losses.data);
 
         const int STATISTICS_PERIOD = 7;
-        Stats averageIncrease = new Stats();
+        var averageIncrease = new Stats();
         var requestDate = losses.data.date;
 
         for (int i = 0; i < STATISTICS_PERIOD; i++)
         {
-            requestDate = requestDate.Subtract(TimeSpan.FromDays(1));
+            requestDate = requestDate.AddDays(-1);
             var requestDateStr = requestDate.Date.ToString("yyyy-MM-dd");
             var res = new HttpClient().GetFromJsonAsync<Root>($"https://russianwarship.rip/api/v1/statistics/{requestDateStr}").Result;
             if (res != null)
@@ -219,7 +215,7 @@ public class RussianLossesService
 
             var increase = new List<string>();
             double coeficient = 0;
-            string significantStatGif = String.Empty;
+            var significantStatGif = String.Empty;
 
             foreach (PropertyInfo stat in losses.data.increase.GetType().GetProperties()) {
                 var change = Convert.ToInt32(stat.GetValue(losses.data.increase));
@@ -235,7 +231,7 @@ public class RussianLossesService
                             str.Append(item.smile);
                             
                             var random = new Random();
-                            int index = random.Next(item.animation.Count);
+                            var index = random.Next(item.animation.Count);
                             if (item.limit == 0)
                             {
                                 data.animations.Add(item.animation[index]);
