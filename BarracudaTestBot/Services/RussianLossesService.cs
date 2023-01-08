@@ -1,12 +1,6 @@
-using System.Text.Json;
 using System.Reflection;
 using System.Text;
 using System.Globalization;
-using Microsoft.AspNetCore.Mvc;
-using Telegram.Bot.Types;
-using System.Collections.ObjectModel;
-using System.Numerics;
-using static System.Net.WebRequestMethods;
 
 namespace BarracudaTestBot.Services;
 
@@ -60,6 +54,46 @@ public class Stats
     public int uav_systems { get; set; }
     public int special_military_equip { get; set; }
     public int atgm_srbm_systems { get; set; }
+
+    public static Stats operator - (Stats a, Stats b)
+    {
+        var res = new Stats();
+        res.personnel_units = a.personnel_units - b.personnel_units;
+        res.tanks = a.tanks - b.tanks;
+        res.armoured_fighting_vehicles = a.armoured_fighting_vehicles - b.armoured_fighting_vehicles;
+        res.artillery_systems = a.artillery_systems - b.artillery_systems;
+        res.mlrs = a.mlrs - b.mlrs;
+        res.aa_warfare_systems = a.aa_warfare_systems - b.aa_warfare_systems;
+        res.planes = a.planes - b.planes;
+        res.helicopters = a.helicopters - b.helicopters;
+        res.vehicles_fuel_tanks = a.vehicles_fuel_tanks - b.vehicles_fuel_tanks;
+        res.warships_cutters = a.warships_cutters - b.warships_cutters;
+        res.cruise_missiles = a.cruise_missiles - b.cruise_missiles;
+        res.uav_systems = a.uav_systems - b.uav_systems;
+        res.special_military_equip = a.special_military_equip - b.special_military_equip;
+        res.atgm_srbm_systems = a.atgm_srbm_systems - b.atgm_srbm_systems;
+        return res;
+    }
+
+    public static Stats operator + (Stats a, Stats b)
+    {
+        var res = new Stats();
+        res.personnel_units = a.personnel_units + b.personnel_units;
+        res.tanks = a.tanks + b.tanks;
+        res.armoured_fighting_vehicles = a.armoured_fighting_vehicles + b.armoured_fighting_vehicles;
+        res.artillery_systems = a.artillery_systems + b.artillery_systems;
+        res.mlrs = a.mlrs + b.mlrs;
+        res.aa_warfare_systems = a.aa_warfare_systems + b.aa_warfare_systems;
+        res.planes = a.planes + b.planes;
+        res.helicopters = a.helicopters + b.helicopters;
+        res.vehicles_fuel_tanks = a.vehicles_fuel_tanks + b.vehicles_fuel_tanks;
+        res.warships_cutters = a.warships_cutters + b.warships_cutters;
+        res.cruise_missiles = a.cruise_missiles + b.cruise_missiles;
+        res.uav_systems = a.uav_systems + b.uav_systems;
+        res.special_military_equip = a.special_military_equip + b.special_military_equip;
+        res.atgm_srbm_systems = a.atgm_srbm_systems + b.atgm_srbm_systems;
+        return res;
+    }
 }
 
 public class RussianLossesData
@@ -69,54 +103,90 @@ public class RussianLossesData
     public List<string> animations = new ();
 }
 
-public class Limit
+public class LimitData
 {
-    public int limit { get; set; }
-    public string smile { get; set; }
-    public List<string> animation = new ();
-    public List<string> sticker = new ();
+    public double Limit { get; set; }
+    public string Smile { get; set; }
+    public List<string> Animation = new ();
+    public List<string> Sticker = new ();
+    public string Caption { get; set; }
 }
 
 public class RussianLossesService
 {
-    private readonly Dictionary<string, List<Limit>> limits = new Dictionary<string, List<Limit>>
+    private HttpClient _httpClient;
+    public RussianLossesService(HttpClient httpClient)
     {
-        ["personnel_units"] = new List<Limit>() {
-            new Limit() { limit = 1500, smile = "🔥🔥🔥 💪👊💪 💥💥💥", sticker = {"CAACAgIAAxkBAAEBZWljTVG3uiQ6EpmPJNLPCMQYqgHKpAAC0R0AAtz9eUiSMtzqMNIUsioE"} },
-            new Limit() { limit = 1000, smile = "🤖💪👊" , animation = {"https://media2.giphy.com/media/2w6I6nCyf5rmy5SHBy/giphy.gif", "https://media2.giphy.com/media/Oj7yTCLSZjSt2JMwi2/giphy.gif"} },
-            new Limit() { limit = 750, smile = "🥳💪", animation = {"https://media.tenor.com/1OX3Uc7IgkMAAAAM/oof-military.gif"} },
-            new Limit() { limit = 500, smile = "🎉", animation = { "https://64.media.tumblr.com/1d112324be4bf9251352b3dd4d9546df/c9a1751f8d44ebf2-74/s400x600/df1fc5490d6a4b9ecf50cd25ebac0cd48e038fce.gif" } },
-        },
-        ["tanks"] = new List<Limit>() {
-            new Limit() { limit = 20, smile = "💥🙉", animation = {"https://media.giphy.com/media/AgaXMCnoSbNHa/giphy.gif" } },
-        },
-        ["planes"] = new List<Limit>() {
-            new Limit() { limit = 1, smile = "🔥", animation = {"https://thumbs.gfycat.com/BaggySarcasticCarpenterant-max-1mb.gif", "CgACAgIAAxkBAAEBhZ1jl6GT6PHvhErUV6D4CNtO3Se38gAClCQAAuCTwEi7wz132XMHDCsE" } },
-        },
-        ["warships_cutters"] = new List<Limit>() {
-            new Limit() { limit = 1, smile = "🔥", animation = {"https://media.tenor.com/bhAAVRUg_igAAAAM/fail-as-a-team-team-fail.gif" } },
-        },
-        ["uav_systems"] = new List<Limit>() {
-            new Limit() { limit = 7, smile = "🔥", animation = {"https://media.tenor.com/aDV3obO5gAIAAAAd/plane-toy-plane.gif", "https://thumbs.gfycat.com/GiddyQuickCardinal-max-1mb.gif" } },
-        },
-        ["helicopters"] = new List<Limit>() {
-            new Limit() { limit = 3, smile = "🔥", animation = { "https://i.gifer.com/HGjG.gif", "https://i.gifer.com/3Y7s.gif" } },
-        },
-        ["mlrs"] = new List<Limit>() {
-            new Limit() { limit = 2, smile = "🔥", animation = { "https://i.ucrazy.ru/files/pics/2014.07/1404321857_3.gif" } },
-        },
-        ["artillery_systems"] = new List<Limit>() {
-            new Limit() { limit = 5, smile = "🔥", animation = { "https://i.makeagif.com/media/2-27-2021/2nmnM0.gif" } },
-        },
+        _httpClient = httpClient;
+    }
+
+    private readonly Dictionary<string, LimitData> statlimitsInfo = new Dictionary<string, LimitData>
+    {
+        ["personnel_units"] = 
+            new LimitData() {
+                Caption = "\"русні\"",
+                Smile = "🔥", Animation = { "https://64.media.tumblr.com/1d112324be4bf9251352b3dd4d9546df/c9a1751f8d44ebf2-74/s400x600/df1fc5490d6a4b9ecf50cd25ebac0cd48e038fce.gif",
+                                            "https://media.tenor.com/1OX3Uc7IgkMAAAAM/oof-military.gif", "https://media2.giphy.com/media/2w6I6nCyf5rmy5SHBy/giphy.gif",
+                                            "https://media2.giphy.com/media/Oj7yTCLSZjSt2JMwi2/giphy.gif" } },
+        ["tanks"] = new LimitData { Caption = "скрєпних танків",  Smile = "💥", Animation = { "https://media.giphy.com/media/AgaXMCnoSbNHa/giphy.gif" } },
+        ["armoured_fighting_vehicles"] = new LimitData() { Caption = "брон\\. машин", Smile = "🔥" },
+        ["artillery_systems"] = new LimitData { Caption = "арт\\. систем", Smile = "🔥", Animation = { "https://i.makeagif.com/media/2-27-2021/2nmnM0.gif" } },
+        ["mlrs"] = new LimitData { Caption = "РСЗВ", Smile = "🔥", Animation = { "https://i.ucrazy.ru/files/pics/2014.07/1404321857_3.gif" } },
+        ["aa_warfare_systems"] = new LimitData { Caption = "аналоговнєтних ппо", Smile = "🔥", Animation = { "https://i.makeagif.com/media/9-25-2015/eLgg4N.gif" } },
+        ["planes"] = new LimitData {
+            Caption = "вєчнольотних літаків",
+            Smile = "🔥", Animation = { "https://thumbs.gfycat.com/BaggySarcasticCarpenterant-max-1mb.gif",
+                                        "https://media.giphy.com/media/7SIcw2yfQdfeJgP29f/giphy-downsized-large.gif",
+                                        "https://media.giphy.com/media/Qtz7JZFyhhEXaRk7kT/giphy.gif"} },
+        ["helicopters"] = new LimitData { Caption = "гелікоптерів", Smile = "🔥", Animation = { "https://i.gifer.com/HGjG.gif", "https://i.gifer.com/3Y7s.gif" } },
+        ["vehicles_fuel_tanks"] = new LimitData { Caption = "авто та цистерни", Smile = "🔥"  },
+        ["warships_cutters"] = new LimitData { Caption = "кораблі/катери", Smile = "🔥", Animation = {"https://media.tenor.com/bhAAVRUg_igAAAAM/fail-as-a-team-team-fail.gif" } },
+        ["cruise_missiles"] = new LimitData { Caption = "крилатих ракет", Smile = "🔥" },
+        ["uav_systems"] = new LimitData {
+            Caption = "БПЛА",
+            Smile = "🔥", Animation = { "https://media.tenor.com/aDV3obO5gAIAAAAd/plane-toy-plane.gif", 
+                                        "https://thumbs.gfycat.com/GiddyQuickCardinal-max-1mb.gif" } },
+        ["special_military_equip"] = new LimitData { Caption = "спецтехніка", Smile = "🔥" },
+        ["atgm_srbm_systems"] = new LimitData { Caption = "ОТРК", Smile = "🔥" },
     };
+
+    private async Task SetLimits(Root losses)
+    {
+        var previouslosses = new List<Data>{ losses.data };
+
+        const int STATISTICS_PERIOD = 7;
+        var averageIncrease = new Stats();
+        var requestDate = losses.data.date;
+
+        for (int i = 0; i < STATISTICS_PERIOD; i++)
+        {
+            requestDate = requestDate.AddDays(-1);
+            var requestDateStr = requestDate.Date.ToString("yyyy-MM-dd");
+            var res = await _httpClient.GetFromJsonAsync<Root>($"https://russianwarship.rip/api/v1/statistics/{requestDateStr}");
+            if (res != null)
+            {
+                previouslosses.Add(res.data);
+                if (i != 0)
+                {
+                    averageIncrease += previouslosses[i - 1].stats - previouslosses[i].stats;
+                }
+            }
+        }
+
+        foreach (PropertyInfo stat in averageIncrease.GetType().GetProperties())
+        {
+            var change = Convert.ToDouble(stat.GetValue(averageIncrease));
+            statlimitsInfo[stat.Name].Limit = change / STATISTICS_PERIOD;
+            System.Diagnostics.Trace.WriteLine($"{stat.Name} : {change / STATISTICS_PERIOD}");
+        }
+    }
 
     public async Task<RussianLossesData> GetData()
     {
-        RussianLossesData data = new RussianLossesData();
+        var data = new RussianLossesData();
         try
         {
-            var losses = await new HttpClient()
-                .GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
+            var losses = await _httpClient.GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
 
             if (string.IsNullOrEmpty(losses!.message) || losses.message != "The data were fetched successfully.")
             {
@@ -124,60 +194,53 @@ public class RussianLossesService
             }
             var date = losses.data.date.ToString("dd/MM/yy", CultureInfo.CreateSpecificCulture("en-US"));
             var builder = new StringBuilder($"Втрати на {date}{Environment.NewLine}");
-
-            Dictionary<string, string> statNameDictionary = new Dictionary<string, string> {
-                ["personnel_units"] = "русні",
-                ["tanks"] = "скрєпних танків",
-                ["armoured_fighting_vehicles"] = "брон\\. машин",
-                ["artillery_systems"] = "арт\\. систем",
-                ["mlrs"] = "РСЗВ",
-                ["aa_warfare_systems"] = "аналоговнєтних ппо",
-                ["planes"] = "вєчнольотних літаків",
-                ["helicopters"] = "гелікоптерів",
-                ["vehicles_fuel_tanks"] = "авто та цистерни",
-                ["warships_cutters"] = "кораблі/катери",
-                ["cruise_missiles"] = "крилатих ракет",
-                ["uav_systems"] = "БПЛА",
-                ["special_military_equip"] = "спецтехніка",
-                ["atgm_srbm_systems"] = "ОТРК",
-            };
+            await SetLimits(losses);
 
             var stats = new List<string>();
-            foreach (PropertyInfo stat in losses.data.stats.GetType().GetProperties()) {
-                stats.Add($"{statNameDictionary[stat.Name]}: *{stat.GetValue(losses.data.stats)}*");
-            }
 
             var increase = new List<string>();
-            foreach (PropertyInfo stat in losses.data.increase.GetType().GetProperties()) {
-                var change = Convert.ToInt32(stat.GetValue(losses.data.increase));
-                var str = new StringBuilder();
-                if (change != 0) {
+            double coeficient = 0;
+            var significantStatGif = String.Empty;
+            var statsInfoType = losses.data.stats.GetType();
+            foreach (PropertyInfo stat in losses.data.increase.GetType().GetProperties())
+            {
+                if (statlimitsInfo.TryGetValue(stat.Name, out var item))
+                {
+                    stats.Add($"{item.Caption}: *{statsInfoType.GetProperty(stat.Name)!.GetValue(losses.data.stats)}*");
+                    var change = Convert.ToInt32(stat.GetValue(losses.data.increase));
+                    var str = new StringBuilder();
                     str.Append($" \\+ \\(*{change}*\\)");
-                    limits.TryGetValue(stat.Name, out List<Limit> limitsList);
-                    if (limitsList != null)
+                    if (change >= item.Limit)
                     {
-                        foreach (var item in limitsList)
+                        str.Append(item.Smile);
+
+                        if (item.Animation.Any())
                         {
-                            if (change >= item.limit)
+                            var random = new Random();
+                            var index = random.Next(item.Animation.Count);
+                            if (item.Limit == 0)
                             {
-                                str.Append(item.smile);
-                                var random = new Random();
-                                if (item.animation.Any())
+                                data.animations.Add(item.Animation[index]);
+                            }
+                            else
+                            {
+                                var coef = change / item.Limit;
+                                if (coef > coeficient)
                                 {
-                                    int index = random.Next(item.animation.Count);
-                                    data.animations.Add(item.animation[index]);
+                                    coeficient = coef;
+                                    significantStatGif = item.Animation[index];
                                 }
-                                if (item.sticker.Any())
-                                {
-                                    int index = random.Next(item.sticker.Count);
-                                    data.stickers.Add(item.sticker[index]);
-                                }
-                                break;
                             }
                         }
                     }
+                    increase.Add(str.ToString());
                 }
-                increase.Add(str.ToString());
+                
+            }
+
+            if (!string.IsNullOrEmpty(significantStatGif))
+            {
+                data.animations.Add(significantStatGif);
             }
 
             for (int i = 0; i < stats.Count(); i++) {
@@ -192,6 +255,12 @@ public class RussianLossesService
         {
             Console.WriteLine(hre);
             return data;
+        }
+        // for debug
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception);
+            throw;
         }
     }
 }
