@@ -214,10 +214,10 @@ public class RussianLossesService
                     {
                         str.Append(item.Smile);
 
-                        if (item.Animation.Count > 0)
+                        if (item.Animation.Any())
                         {
                             var random = new Random();
-                            var index = random.Next(item.Animation.Count - 1);
+                            var index = random.Next(item.Animation.Count);
                             if (item.Limit == 0)
                             {
                                 data.animations.Add(item.Animation[index]);
