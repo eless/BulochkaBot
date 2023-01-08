@@ -209,33 +209,33 @@ public class RussianLossesService
                     stats.Add($"{item.Caption}: *{statsInfoType.GetProperty(stat.Name)!.GetValue(losses.data.stats)}*");
                     var change = Convert.ToInt32(stat.GetValue(losses.data.increase));
                     var str = new StringBuilder();
-                    str.Append($" \\+ \\(*{change}*\\)");
-                    if (change != 0 && change >= item.Limit)
+                    if (change != 0)
                     {
-                        str.Append(item.Smile);
-
-                        if (item.Animation.Any())
+                        str.Append($" \\+ \\(*{change}*\\)");
+                        if (change >= item.Limit)
                         {
-                            var random = new Random();
-                            var index = random.Next(item.Animation.Count);
-                            if (item.Limit == 0)
+                            if (item.Animation.Any())
                             {
-                                data.animations.Add(item.Animation[index]);
-                            }
-                            else
-                            {
-                                var coef = change / item.Limit;
-                                if (coef > coeficient)
+                                var random = new Random();
+                                var index = random.Next(item.Animation.Count);
+                                if (item.Limit == 0)
                                 {
-                                    coeficient = coef;
-                                    significantStatGif = item.Animation[index];
+                                    data.animations.Add(item.Animation[index]);
+                                }
+                                else
+                                {
+                                    var coef = change / item.Limit;
+                                    if (coef > coeficient)
+                                    {
+                                        coeficient = coef;
+                                        significantStatGif = item.Animation[index];
+                                    }
                                 }
                             }
                         }
                     }
                     increase.Add(str.ToString());
                 }
-                
             }
 
             if (!string.IsNullOrEmpty(significantStatGif))
