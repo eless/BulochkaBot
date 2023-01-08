@@ -119,6 +119,12 @@ public class Limit
 
 public class RussianLossesService
 {
+    private HttpClient _httpClient;
+    public RussianLossesService(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
     private readonly Dictionary<string, Limit> statlimitsInfo = new Dictionary<string, Limit>
     {
         ["personnel_units"] = 
@@ -145,8 +151,7 @@ public class RussianLossesService
 
     private async void setLimits(Root losses)
     {
-        List<Data> previouslosses = new List<Data>();
-        previouslosses.Add(losses.data);
+        var previouslosses = new List<Data>{ losses.data };
 
         const int STATISTICS_PERIOD = 7;
         var averageIncrease = new Stats();
@@ -156,7 +161,7 @@ public class RussianLossesService
         {
             requestDate = requestDate.AddDays(-1);
             var requestDateStr = requestDate.Date.ToString("yyyy-MM-dd");
-            var res = new HttpClient().GetFromJsonAsync<Root>($"https://russianwarship.rip/api/v1/statistics/{requestDateStr}").Result;
+            var res = _httpClient.GetFromJsonAsync<Root>($"https://russianwarship.rip/api/v1/statistics/{requestDateStr}").Result;
             if (res != null)
             {
                 previouslosses.Add(res.data);
@@ -180,8 +185,7 @@ public class RussianLossesService
         RussianLossesData data = new RussianLossesData();
         try
         {
-            var losses = await new HttpClient()
-                .GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
+            var losses = await _httpClient.GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
 
             if (string.IsNullOrEmpty(losses!.message) || losses.message != "The data were fetched successfully.")
             {

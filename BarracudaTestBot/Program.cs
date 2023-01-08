@@ -33,6 +33,7 @@ internal class Program
         builder.Services.AddSingleton<AirAlarmStickerSelector>();
         builder.Services.AddHostedService<RussianLossesDailyReport>();
         builder.Services.AddSingleton<RussianLossesSender>();
+        builder.Services.AddSingleton<HttpClient>();
 
 
         var app = builder.Build();
