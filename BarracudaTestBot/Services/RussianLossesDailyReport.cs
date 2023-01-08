@@ -1,12 +1,4 @@
-﻿using BarracudaTestBot.Checkers;
-using System.Threading;
-using Telegram.Bot;
-using static System.Net.Mime.MediaTypeNames;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types;
-using System.Diagnostics.Eventing.Reader;
-using System.Timers;
-
+﻿
 namespace BarracudaTestBot.Services
 {
     public class RussianLossesDailyReport : BackgroundService

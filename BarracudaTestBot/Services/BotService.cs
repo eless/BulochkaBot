@@ -4,8 +4,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot;
 using BarracudaTestBot.Checkers;
 using Telegram.Bot.Exceptions;
-using System.Threading;
-using System.Runtime.CompilerServices;
 
 namespace BarracudaTestBot.Services;
 
@@ -73,8 +71,9 @@ public class BotService
 
         var chatId = message.Chat.Id;
         System.Diagnostics.Trace.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
+        Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
-        if(messageText == $"/off")
+        if (messageText == $"/off")
         {
             MutedInChats.Add(chatId);
         } else if(messageText == $"/on")

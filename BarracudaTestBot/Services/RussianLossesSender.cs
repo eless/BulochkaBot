@@ -24,22 +24,16 @@ namespace BarracudaTestBot.Services
                     text: data.units,
                     parseMode: ParseMode.MarkdownV2);
             }
-            foreach(var sticker in data.stickers) {
-                if (!string.IsNullOrEmpty(sticker))
-                {
-                    await _botClient.SendStickerAsync(
+            foreach(var sticker in data.stickers.Where(s => !string.IsNullOrEmpty(s))) {
+                await _botClient.SendStickerAsync(
                         chatId: -1001344803304,
-                        sticker: sticker);
-                }
+                    sticker: sticker);
             }
-            foreach (var gif in data.animations)
+            foreach (var gif in data.animations.Where(g => !string.IsNullOrEmpty(g)))
             {
-                if (!string.IsNullOrEmpty(gif))
-                {
-                    await _botClient.SendAnimationAsync(
+                await _botClient.SendAnimationAsync(
                         chatId: -1001344803304,
-                        animation: gif);
-                }
+                    animation: gif);
             }
         }
     }
