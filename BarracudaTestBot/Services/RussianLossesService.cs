@@ -214,6 +214,7 @@ public class RussianLossesService
                         str.Append($" \\+ \\(*{change}*\\)");
                         if (change >= item.Limit)
                         {
+                            str.Append(item.Smile);
                             if (item.Animation.Any())
                             {
                                 var random = new Random();
