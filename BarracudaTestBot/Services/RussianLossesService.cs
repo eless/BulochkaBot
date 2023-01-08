@@ -210,7 +210,7 @@ public class RussianLossesService
                     var change = Convert.ToInt32(stat.GetValue(losses.data.increase));
                     var str = new StringBuilder();
                     str.Append($" \\+ \\(*{change}*\\)");
-                    if (change >= item.Limit)
+                    if (change != 0 && change >= item.Limit)
                     {
                         str.Append(item.Smile);
 
