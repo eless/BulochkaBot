@@ -124,7 +124,7 @@ public class RussianLossesService
     {
         ["personnel_units"] = 
             new LimitData() {
-                Caption = "\"русні\"",
+                Caption = "русні",
                 Smile = "🔥", Animation = { "https://64.media.tumblr.com/1d112324be4bf9251352b3dd4d9546df/c9a1751f8d44ebf2-74/s400x600/df1fc5490d6a4b9ecf50cd25ebac0cd48e038fce.gif",
                                             "https://media.tenor.com/1OX3Uc7IgkMAAAAM/oof-military.gif", "https://media2.giphy.com/media/2w6I6nCyf5rmy5SHBy/giphy.gif",
                                             "https://media2.giphy.com/media/Oj7yTCLSZjSt2JMwi2/giphy.gif" } },
