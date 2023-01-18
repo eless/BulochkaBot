@@ -13,6 +13,8 @@ public class BotService
     private readonly ITelegramBotClient _botClient;
     private readonly WordChecker _wordChecker;
     private readonly StickerChecker _stickerChecker;
+    private RussianLossesSender _russianLossesSender;
+    private RussianLossesService _russianLossesService;
 
     List<long> MutedInChats { get; set; } = new List<long>();
 
@@ -24,11 +26,13 @@ public class BotService
         ["stickers"] = "команди стікерів"
     };
 
-    public BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient)
+    public BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient, RussianLossesSender russianLossesSender, RussianLossesService russianLossesService)
     {
         _botClient = botClient;
         _wordChecker = wordChecker;
         _stickerChecker = stickerChecker;
+        _russianLossesSender = russianLossesSender;
+        _russianLossesService = russianLossesService;
     }
 
     public async Task Start(CancellationTokenSource cts)
@@ -120,6 +124,11 @@ public class BotService
                 .ForAll(
                     async (commandText) =>
                     {
+                        if (commandText.Text == "losses")
+                        {
+                            var data = await _russianLossesService.GetData();
+                            await _russianLossesSender.Send(data, message?.Chat?.Id ?? -1001344803304);
+                        } else
                         if (_stickerChecker.IsStickerCommand(commandText.Text))
                             await _botClient.SendStickerAsync(
                                 chatId: message?.Chat?.Id ?? -1001344803304,

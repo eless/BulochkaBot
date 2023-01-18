@@ -7,12 +7,10 @@ namespace BarracudaTestBot.Checkers;
 public class WordChecker
 {
     private readonly StickerChecker _stickerChecker;
-    private RussianLossesService _russianLossesService;
     private PutinGenerator _putinGenerator;
-    private RussianLossesSender _russianLossesSender;
 
-    public WordChecker(RussianLossesService russianLossesService, PutinGenerator putinGenerator, StickerChecker stickerChecker, RussianLossesSender russianLossesSender) =>
-        (_russianLossesService, _putinGenerator, _stickerChecker, _russianLossesSender) = (russianLossesService, putinGenerator, stickerChecker, russianLossesSender);
+    public WordChecker(RussianLossesService russianLossesService, PutinGenerator putinGenerator, StickerChecker stickerChecker) =>
+        (_putinGenerator, _stickerChecker) = (putinGenerator, stickerChecker);
 
     protected Dictionary<Regex, Action<List<CommandAnswer>>> Commands => new Dictionary<Regex, Action<List<CommandAnswer>>>
     {
@@ -20,11 +18,7 @@ public class WordChecker
         [new Regex("шо по русні", RegexOptions.IgnoreCase)] = (commands) => commands.Add(new CommandAnswer("*русні пизда\\!*", ParseMode.MarkdownV2)),
         [new Regex("путін", RegexOptions.IgnoreCase)] = (commands) => commands.Add(new CommandAnswer(_putinGenerator.GenerateName(), ParseMode.Markdown)),
         [new Regex("булочка", RegexOptions.IgnoreCase)] = (commands) => commands.Add(new CommandAnswer("мурняв", ParseMode.Markdown)),
-        [new Regex($"^/losses")] = (commands) =>
-        {
-            var losses = _russianLossesService.GetData().Result;
-            _russianLossesSender.Send(losses);
-        },
+        [new Regex($"^/losses")] = (commands) => commands.Add(new CommandAnswer("losses", ParseMode.MarkdownV2)),
         [new Regex($"^/stickers")] = (commands) => commands.Add(new CommandAnswer(string.Join(Environment.NewLine, _stickerChecker.GetCommands()), ParseMode.MarkdownV2)),
     };
 
