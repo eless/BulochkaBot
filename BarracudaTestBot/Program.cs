@@ -57,9 +57,9 @@ internal class Program
             botService.Start(cts);
         }
 
-        System.Diagnostics.Trace.WriteLine($"app starting at {startDate}");
+        System.Diagnostics.Trace.TraceInformation($"app starting at {startDate}");
         app.Run();
-        System.Diagnostics.Trace.WriteLine($"app started");
+        System.Diagnostics.Trace.TraceInformation($"app started");
 
         // Send cancellation request to stop bot
         cts.Cancel();

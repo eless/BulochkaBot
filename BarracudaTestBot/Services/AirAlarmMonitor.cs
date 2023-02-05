@@ -14,13 +14,20 @@
 
         protected override async Task ExecuteAsync(CancellationToken cts)
         {
-            using var timer = new PeriodicTimer(_alarmCheckPeriod);
-            while (!cts.IsCancellationRequested)
+            try
             {
-                await timer.WaitForNextTickAsync();
-                var result = _checker.Check().Result;
-                _notifier.notify(result);
-                // TODO: maybe add report at midnight about all alerts this day, and wish a good night.
+                using var timer = new PeriodicTimer(_alarmCheckPeriod);
+                while (!cts.IsCancellationRequested)
+                {
+                    await timer.WaitForNextTickAsync();
+                    var result = _checker.Check().Result;
+                    _notifier.notify(result);
+                    // TODO: maybe add report at midnight about all alerts this day, and wish a good night.
+                }
+            }
+            catch(Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError($"The following exception have occurred: {ex.GetType().ToString()}");
             }
         }
     }
