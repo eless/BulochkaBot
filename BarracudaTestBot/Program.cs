@@ -1,6 +1,10 @@
 ﻿using BarracudaTestBot.Checkers;
 using BarracudaTestBot.Services;
 using Telegram.Bot;
+using Microsoft.ApplicationInsights;
+using Telegram.Bot.Types;
+using System;
+using Microsoft.Extensions.Configuration;
 
 internal class Program
 {
@@ -34,7 +38,8 @@ internal class Program
         builder.Services.AddHostedService<RussianLossesDailyReport>();
         builder.Services.AddSingleton<RussianLossesSender>();
         builder.Services.AddSingleton<HttpClient>();
-
+        builder.Services.AddApplicationInsightsTelemetry();
+        builder.Services.AddSingleton<TelemetryClient>();
 
         var app = builder.Build();
 

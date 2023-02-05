@@ -3,9 +3,12 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationInsightsResourceId>/subscriptions/75a4fa67-d3c4-4212-9b4d-7b5501f6ac21/resourceGroups/BarracudaBotResourceGroup/providers/microsoft.insights/components/BarracudaTestBot</ApplicationInsightsResourceId>
+    <UserSecretsId>cdbfaf9c-d6ee-4867-a02f-f28e25cdf6f8</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="4.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
