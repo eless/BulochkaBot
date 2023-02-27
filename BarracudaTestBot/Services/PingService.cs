@@ -1,7 +1,14 @@
-﻿namespace BarracudaTestBot.Services
+﻿using Microsoft.ApplicationInsights;
+
+namespace BarracudaTestBot.Services
 {
     public class PingService : BackgroundService
     {
+        private TelemetryClient _telemetry;
+        public PingService(TelemetryClient telemetry)
+        {
+            _telemetry = telemetry;
+        }
         private int _pingPeriodMin = 10;
         private string urlToPing = "https://barracudatestbot.azurewebsites.net";
         private int PingPeriod => 1000 * 60 * _pingPeriodMin;
@@ -16,9 +23,9 @@
                 {
                     var content = await client.GetStringAsync(urlToPing);
                 }
-                catch (HttpRequestException hre)
+                catch (Exception ex)
                 {
-                    System.Diagnostics.Trace.WriteLine(hre);
+                    _telemetry.TrackException(ex);
                 }
             }
         }

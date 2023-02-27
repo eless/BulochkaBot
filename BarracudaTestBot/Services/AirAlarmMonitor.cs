@@ -32,7 +32,7 @@ namespace BarracudaTestBot.Services
                     // TODO: maybe add report at midnight about all alerts this day, and wish a good night.
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _telemetry.TrackException(ex);
             }

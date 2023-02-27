@@ -1,14 +1,17 @@
 ﻿using BarracudaTestBot.Checkers;
 using Telegram.Bot;
 using System;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 
 namespace BarracudaTestBot.Services
 {
     public class AirAlarmChecker
     {
-        public AirAlarmChecker()
+        private TelemetryClient _telemetry;
+        public AirAlarmChecker(TelemetryClient telemetry)
         {
-
+            _telemetry = telemetry;
         }
         private static bool _KyivAlertActive = false;
 
@@ -53,9 +56,9 @@ namespace BarracudaTestBot.Services
                     status = _KyivAlertActive ? AlertStatus.Active : AlertStatus.AllClear;
                 }
             }
-            catch (HttpRequestException hre)
+            catch (Exception ex)
             {
-                System.Diagnostics.Trace.WriteLine(hre);
+                _telemetry.TrackException(ex);
                 status = AlertStatus.FatalError;
             }
             return status;

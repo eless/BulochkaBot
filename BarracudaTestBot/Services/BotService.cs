@@ -4,6 +4,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot;
 using BarracudaTestBot.Checkers;
 using Telegram.Bot.Exceptions;
+using Microsoft.ApplicationInsights;
 
 namespace BarracudaTestBot.Services;
 
@@ -15,6 +16,7 @@ public class BotService
     private readonly StickerChecker _stickerChecker;
     private RussianLossesSender _russianLossesSender;
     private RussianLossesService _russianLossesService;
+    private TelemetryClient _telemetry;
 
     List<long> MutedInChats { get; set; } = new List<long>();
 
@@ -26,13 +28,16 @@ public class BotService
         ["stickers"] = "команди стікерів"
     };
 
-    public BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient, RussianLossesSender russianLossesSender, RussianLossesService russianLossesService)
+    public BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient,
+                      RussianLossesSender russianLossesSender, RussianLossesService russianLossesService,
+                      TelemetryClient telemetry)
     {
         _botClient = botClient;
         _wordChecker = wordChecker;
         _stickerChecker = stickerChecker;
         _russianLossesSender = russianLossesSender;
         _russianLossesService = russianLossesService;
+        _telemetry = telemetry;
     }
 
     public async Task Start(CancellationTokenSource cts)
@@ -161,7 +166,7 @@ public class BotService
             _ => exception.ToString()
         };
 
-        Console.WriteLine(ErrorMessage);
+        _telemetry.TrackTrace(ErrorMessage);
         return Task.CompletedTask;
     }
 

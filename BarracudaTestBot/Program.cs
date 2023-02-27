@@ -5,6 +5,8 @@ using Microsoft.ApplicationInsights;
 using Telegram.Bot.Types;
 using System;
 using Microsoft.Extensions.Configuration;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.Channel;
 
 internal class Program
 {
@@ -39,8 +41,22 @@ internal class Program
         builder.Services.AddSingleton<RussianLossesSender>();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddApplicationInsightsTelemetry();
-        builder.Services.AddSingleton<TelemetryClient>();
-
+        var configuration = TelemetryConfiguration.CreateDefault();
+        var telemetryClient = new TelemetryClient(configuration);
+        builder.Services.AddSingleton(telemetryClient);
+       
+        try
+        {
+            // Code that can potentially throw an exception
+            int x = 0;
+            int y = 1 / x;
+        }
+        catch (Exception ex)
+        {
+            //TODO: remove after the test
+            telemetryClient.TrackTrace($" Test exeption catched {ex}");
+            telemetryClient.TrackException(ex);
+        }
         var app = builder.Build();
 
         app.UseExceptionHandler("/Error");
@@ -62,12 +78,10 @@ internal class Program
             botService.Start(cts);
         }
 
-        System.Diagnostics.Trace.TraceInformation($"app starting at {startDate}");
+        telemetryClient.TrackTrace($"app starting at {startDate}");
         app.Run();
-        System.Diagnostics.Trace.TraceInformation($"app started");
-
         // Send cancellation request to stop bot
+        telemetryClient.TrackTrace($"app stoped at {DateTime.UtcNow}");
         cts.Cancel();
-
     }
 }

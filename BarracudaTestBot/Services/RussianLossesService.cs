@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text;
 using System.Globalization;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 
 namespace BarracudaTestBot.Services;
 
@@ -115,9 +117,11 @@ public class LimitData
 public class RussianLossesService
 {
     private HttpClient _httpClient;
-    public RussianLossesService(HttpClient httpClient)
+    private TelemetryClient _telemetry;
+    public RussianLossesService(HttpClient httpClient, TelemetryClient telemetry)
     {
         _httpClient = httpClient;
+        _telemetry = telemetry;
     }
 
     private readonly Dictionary<string, LimitData> statlimitsInfo = new Dictionary<string, LimitData>
@@ -177,7 +181,7 @@ public class RussianLossesService
         {
             var change = Convert.ToDouble(stat.GetValue(averageIncrease));
             statlimitsInfo[stat.Name].Limit = change / STATISTICS_PERIOD;
-            System.Diagnostics.Trace.WriteLine($"{stat.Name} : {change / STATISTICS_PERIOD}");
+            _telemetry.TrackTrace($"{stat.Name} : {change / STATISTICS_PERIOD}");
         }
     }
 
@@ -252,16 +256,10 @@ public class RussianLossesService
             data.units = builder.ToString();
             return data;
         }
-        catch (HttpRequestException hre)
+        catch (Exception ex)
         {
-            Console.WriteLine(hre);
+            _telemetry.TrackException(ex);
             return data;
-        }
-        // for debug
-        catch (Exception exception)
-        {
-            Console.WriteLine(exception);
-            throw;
         }
     }
 }
