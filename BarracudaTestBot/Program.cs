@@ -7,11 +7,19 @@ using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.Channel;
+using Microsoft.Extensions.Hosting;
 
 internal class Program
 {
+    private static TelemetryClient _telemetry;
+
     public static void Main(string[] args)
     {
+        // Subscribe to the UnhandledException event
+        AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionEventHandler;
+        var configuration = TelemetryConfiguration.CreateDefault();
+        _telemetry = new TelemetryClient(configuration);
+
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         var builder = WebApplication.CreateBuilder(args);
 
@@ -41,22 +49,8 @@ internal class Program
         builder.Services.AddSingleton<RussianLossesSender>();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddApplicationInsightsTelemetry();
-        var configuration = TelemetryConfiguration.CreateDefault();
-        var telemetryClient = new TelemetryClient(configuration);
-        builder.Services.AddSingleton(telemetryClient);
-       
-        try
-        {
-            // Code that can potentially throw an exception
-            int x = 0;
-            int y = 1 / x;
-        }
-        catch (Exception ex)
-        {
-            //TODO: remove after the test
-            telemetryClient.TrackTrace($" Test exeption catched {ex}");
-            telemetryClient.TrackException(ex);
-        }
+        builder.Services.AddSingleton(_telemetry);
+        
         var app = builder.Build();
 
         app.UseExceptionHandler("/Error");
@@ -78,10 +72,16 @@ internal class Program
             botService.Start(cts);
         }
 
-        telemetryClient.TrackTrace($"app starting at {startDate}");
+        _telemetry.TrackTrace($"app starting at {startDate}");
         app.Run();
         // Send cancellation request to stop bot
-        telemetryClient.TrackTrace($"app stoped at {DateTime.UtcNow}");
+        _telemetry.TrackTrace($"app stoped at {DateTime.UtcNow}");
         cts.Cancel();
+    }
+
+    static void UnhandledExceptionEventHandler(object sender, UnhandledExceptionEventArgs ex)
+    {
+        _telemetry.TrackTrace("An unhandled exception occurred: " + ex.ExceptionObject);
+        _telemetry.TrackException((Exception) ex.ExceptionObject);
     }
 }
