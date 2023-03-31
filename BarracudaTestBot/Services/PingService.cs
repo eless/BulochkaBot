@@ -18,16 +18,23 @@ namespace BarracudaTestBot.Services
             using var client = new HttpClient();
             while (!cts.IsCancellationRequested)
             {
-                await Task.Delay(PingPeriod, cts);
+                bool success = true;
                 try
                 {
                     var content = await client.GetStringAsync(urlToPing);
+                }
+                catch (TaskCanceledException)
+                {
+                    _telemetry.TrackTrace("PING TASK CANCELLED!");
+                    break;
                 }
                 catch (Exception ex)
                 {
                     _telemetry.TrackTrace("PING FAILED");
                     _telemetry.TrackException(ex);
+                    success = false;
                 }
+                await Task.Delay(success ? PingPeriod : 1000, cts);
             }
         }
     }
