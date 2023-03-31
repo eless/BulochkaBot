@@ -15,7 +15,7 @@ namespace BarracudaTestBot.Services
         protected override async Task ExecuteAsync(CancellationToken cts)
         {
             DateTime kyivReportTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 12, 0, 0);
-            TimeZoneInfo kyivTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+            TimeZoneInfo kyivTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
             DateTime _reportTime = TimeZoneInfo.ConvertTimeToUtc(kyivReportTime, kyivTimeZone);
 
             DateTime now = DateTime.UtcNow;
