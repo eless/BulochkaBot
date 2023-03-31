@@ -5,7 +5,6 @@ namespace BarracudaTestBot.Services
     {
         private RussianLossesService _russianLossesService;
         private RussianLossesSender _russianLossesSender;
-        private DateTime _reportTime = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: DateTime.Now.Day, hour: 12, minute: 00, second: 00);
 
         public RussianLossesDailyReport(RussianLossesService russianLossesService, RussianLossesSender russianLossesSender)
         {
@@ -15,7 +14,11 @@ namespace BarracudaTestBot.Services
 
         protected override async Task ExecuteAsync(CancellationToken cts)
         {
-            DateTime now = DateTime.Now;
+            DateTime kyivReportTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 12, 0, 0);
+            TimeZoneInfo kyivTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+            DateTime _reportTime = TimeZoneInfo.ConvertTimeToUtc(kyivReportTime, kyivTimeZone);
+
+            DateTime now = DateTime.UtcNow;
             if (now > _reportTime)
             {
                 _reportTime = _reportTime.AddDays(1);
