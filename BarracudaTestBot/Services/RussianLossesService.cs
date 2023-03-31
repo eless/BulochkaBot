@@ -181,7 +181,7 @@ public class RussianLossesService
         {
             var change = Convert.ToDouble(stat.GetValue(averageIncrease));
             statlimitsInfo[stat.Name].Limit = change / STATISTICS_PERIOD;
-            _telemetry.TrackTrace($"{stat.Name} : {change / STATISTICS_PERIOD}");
+            //_telemetry.TrackTrace($"{stat.Name} : {change / STATISTICS_PERIOD}");
         }
     }
 

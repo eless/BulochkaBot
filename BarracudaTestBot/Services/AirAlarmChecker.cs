@@ -58,6 +58,7 @@ namespace BarracudaTestBot.Services
             }
             catch (Exception ex)
             {
+                _telemetry.TrackTrace("ALERT POLL FAILED");
                 _telemetry.TrackException(ex);
                 status = AlertStatus.FatalError;
             }

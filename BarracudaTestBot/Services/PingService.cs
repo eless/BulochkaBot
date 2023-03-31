@@ -25,6 +25,7 @@ namespace BarracudaTestBot.Services
                 }
                 catch (Exception ex)
                 {
+                    _telemetry.TrackTrace("PING FAILED");
                     _telemetry.TrackException(ex);
                 }
             }
