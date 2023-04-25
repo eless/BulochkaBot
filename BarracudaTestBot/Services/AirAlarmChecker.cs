@@ -1,19 +1,20 @@
-﻿using BarracudaTestBot.Checkers;
-using Telegram.Bot;
-using System;
+﻿
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
+using HtmlAgilityPack;
 
 namespace BarracudaTestBot.Services
 {
     public class AirAlarmChecker
     {
         private TelemetryClient _telemetry;
-        public AirAlarmChecker(TelemetryClient telemetry)
+        private HttpClient _httpClient;
+        public AirAlarmChecker(TelemetryClient telemetry, HttpClient httpClient)
         {
             _telemetry = telemetry;
+            _httpClient = httpClient;
         }
-        private static bool _KyivAlertActive = false;
+        private bool _KyivAlertActive = false;
+        private readonly string _airAlertTelegramChannelLink = "https://t.me/s/air_alert_ua";
 
         public enum AlertStatus
         {
@@ -28,25 +29,30 @@ namespace BarracudaTestBot.Services
             var status = AlertStatus.NotChanged;
             try
             {
-                var alert = _KyivAlertActive;
-                using var client = new HttpClient();
-                var content = await client.GetStringAsync("https://t.me/s/air_alert_ua");
+                var content = await _httpClient.GetStringAsync(_airAlertTelegramChannelLink);
+                var doc = new HtmlDocument();
+                doc.LoadHtml(content);
 
-                using StringReader reader = new StringReader(content);
-                while(true)
+                // Find the last mention of "м. Київ" on the page
+                var lastMentionElement = doc.DocumentNode.DescendantsAndSelf()
+                    .Where(e => e.NodeType == HtmlNodeType.Text && e.InnerText.Contains("м. Київ"))
+                    .LastOrDefault();
+
+                var alert = _KyivAlertActive;
+                if (lastMentionElement != null)
                 {
-                    var line = reader.ReadLine();
-                    if (line == null)
+                    // Traverse up the DOM tree to find the parent div element containing the message
+                    var messageDiv = lastMentionElement.Ancestors("div").FirstOrDefault();
+                    if (messageDiv != null)
                     {
-                        break;
-                    }
-                    if (line.Contains("Повітряна тривога в м. Київ"))
-                    {
-                        alert = true;
-                    }
-                    if (line.Contains("Відбій тривоги в м. Київ"))
-                    {
-                        alert = false;
+                        if (messageDiv.InnerText.Contains("Відбій тривоги"))
+                        {
+                            alert = false;
+                        }
+                        else if (messageDiv.InnerText.Contains("Повітряна тривога"))
+                        {
+                            alert = true;
+                        }
                     }
                 }
 
@@ -58,7 +64,7 @@ namespace BarracudaTestBot.Services
             }
             catch (Exception ex)
             {
-                _telemetry.TrackTrace("ALERT POLL FAILED");
+                _telemetry.TrackTrace($"ALERT POLL FAILED: {ex.Message}");
                 _telemetry.TrackException(ex);
                 status = AlertStatus.FatalError;
             }
