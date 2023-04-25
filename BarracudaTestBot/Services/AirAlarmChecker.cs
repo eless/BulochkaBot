@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.ApplicationInsights;
+using HtmlAgilityPack;
 
 namespace BarracudaTestBot.Services
 {
@@ -28,24 +29,30 @@ namespace BarracudaTestBot.Services
             var status = AlertStatus.NotChanged;
             try
             {
-                var alert = _KyivAlertActive;
                 var content = await _httpClient.GetStringAsync(_airAlertTelegramChannelLink);
+                var doc = new HtmlDocument();
+                doc.LoadHtml(content);
 
-                using StringReader reader = new StringReader(content);
-                while(true)
+                // Find the last mention of "м. Київ" on the page
+                var lastMentionElement = doc.DocumentNode.DescendantsAndSelf()
+                    .Where(e => e.NodeType == HtmlNodeType.Text && e.InnerText.Contains("м. Київ"))
+                    .LastOrDefault();
+
+                var alert = _KyivAlertActive;
+                if (lastMentionElement != null)
                 {
-                    var line = reader.ReadLine();
-                    if (line == null)
+                    // Traverse up the DOM tree to find the parent div element containing the message
+                    var messageDiv = lastMentionElement.Ancestors("div").FirstOrDefault();
+                    if (messageDiv != null)
                     {
-                        break;
-                    }
-                    if (line.Contains("Повітряна тривога в м. Київ"))
-                    {
-                        alert = true;
-                    }
-                    if (line.Contains("Відбій тривоги в м. Київ"))
-                    {
-                        alert = false;
+                        if (messageDiv.InnerText.Contains("Відбій тривоги"))
+                        {
+                            alert = false;
+                        }
+                        else if (messageDiv.InnerText.Contains("Повітряна тривога"))
+                        {
+                            alert = true;
+                        }
                     }
                 }
 
