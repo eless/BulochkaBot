@@ -1,19 +1,19 @@
-﻿using BarracudaTestBot.Checkers;
-using Telegram.Bot;
-using System;
+﻿
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
 
 namespace BarracudaTestBot.Services
 {
     public class AirAlarmChecker
     {
         private TelemetryClient _telemetry;
-        public AirAlarmChecker(TelemetryClient telemetry)
+        private HttpClient _httpClient;
+        public AirAlarmChecker(TelemetryClient telemetry, HttpClient httpClient)
         {
             _telemetry = telemetry;
+            _httpClient = httpClient;
         }
-        private static bool _KyivAlertActive = false;
+        private bool _KyivAlertActive = false;
+        private readonly string _airAlertTelegramChannelLink = "https://t.me/s/air_alert_ua";
 
         public enum AlertStatus
         {
@@ -29,8 +29,7 @@ namespace BarracudaTestBot.Services
             try
             {
                 var alert = _KyivAlertActive;
-                using var client = new HttpClient();
-                var content = await client.GetStringAsync("https://t.me/s/air_alert_ua");
+                var content = await _httpClient.GetStringAsync(_airAlertTelegramChannelLink);
 
                 using StringReader reader = new StringReader(content);
                 while(true)
@@ -58,7 +57,7 @@ namespace BarracudaTestBot.Services
             }
             catch (Exception ex)
             {
-                _telemetry.TrackTrace("ALERT POLL FAILED");
+                _telemetry.TrackTrace($"ALERT POLL FAILED: {ex.Message}");
                 _telemetry.TrackException(ex);
                 status = AlertStatus.FatalError;
             }
