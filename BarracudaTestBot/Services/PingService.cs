@@ -17,6 +17,7 @@ namespace BarracudaTestBot.Services
 
         protected override async Task ExecuteAsync(CancellationToken cts)
         {
+            await Task.Delay(TimeSpan.FromSeconds(10)); // wait before site becomes available
             while (!cts.IsCancellationRequested)
             {
                 bool success = true;
