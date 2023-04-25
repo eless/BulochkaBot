@@ -5,23 +5,24 @@ namespace BarracudaTestBot.Services
     public class PingService : BackgroundService
     {
         private TelemetryClient _telemetry;
-        public PingService(TelemetryClient telemetry)
+        private HttpClient _httpClient;
+        public PingService(TelemetryClient telemetry, HttpClient httpClient)
         {
             _telemetry = telemetry;
+            _httpClient = httpClient;
         }
         private int _pingPeriodMin = 10;
         private string urlToPing = "https://barracudatestbot.azurewebsites.net";
-        private int PingPeriod => 1000 * 60 * _pingPeriodMin;
+        private TimeSpan PingPeriod => TimeSpan.FromMinutes(_pingPeriodMin);
 
         protected override async Task ExecuteAsync(CancellationToken cts)
         {
-            using var client = new HttpClient();
             while (!cts.IsCancellationRequested)
             {
                 bool success = true;
                 try
                 {
-                    var content = await client.GetStringAsync(urlToPing);
+                    var content = await _httpClient.GetStringAsync(urlToPing);
                 }
                 catch (TaskCanceledException)
                 {
@@ -30,11 +31,11 @@ namespace BarracudaTestBot.Services
                 }
                 catch (Exception ex)
                 {
-                    _telemetry.TrackTrace("PING FAILED");
+                    _telemetry.TrackTrace($"PING FAILED: {ex.Message}");
                     _telemetry.TrackException(ex);
                     success = false;
                 }
-                await Task.Delay(success ? PingPeriod : 1000, cts);
+                await Task.Delay(success ? PingPeriod : TimeSpan.FromSeconds(1), cts);
             }
         }
     }
