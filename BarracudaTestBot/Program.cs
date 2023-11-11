@@ -2,12 +2,7 @@
 using BarracudaTestBot.Services;
 using Telegram.Bot;
 using Microsoft.ApplicationInsights;
-using Telegram.Bot.Types;
-using System;
-using Microsoft.Extensions.Configuration;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.Channel;
-using Microsoft.Extensions.Hosting;
 
 internal class Program
 {
@@ -50,7 +45,9 @@ internal class Program
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddApplicationInsightsTelemetry();
         builder.Services.AddSingleton(_telemetry);
-        
+        var DataBaseConnectionString = builder.Configuration.GetValue<string>("BulochkaDBConnectionString");
+        builder.Services.AddSingleton(_ => new RussianLossesSubscriptionDataBase(DataBaseConnectionString));
+        builder.Services.AddSingleton<RussianLossesSubscriptionService>();
         var app = builder.Build();
 
         app.UseExceptionHandler("/Error");
