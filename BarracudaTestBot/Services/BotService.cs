@@ -17,7 +17,7 @@ public class BotService
     private RussianLossesSender _russianLossesSender;
     private RussianLossesService _russianLossesService;
     private TelemetryClient _telemetry;
-    private RussianLossesSubscriptionService _lossesSubscriptionManager;
+    private RussianLossesDailyReport _lossesDailyService;
 
     List<long> MutedInChats { get; set; } = new List<long>();
 
@@ -33,7 +33,7 @@ public class BotService
 
     public BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient,
                       RussianLossesSender russianLossesSender, RussianLossesService russianLossesService,
-                      TelemetryClient telemetry, RussianLossesSubscriptionService lossesSubscriptionManager)
+                      TelemetryClient telemetry, RussianLossesDailyReport lossesSubscriptionManager)
     {
         _botClient = botClient;
         _wordChecker = wordChecker;
@@ -41,7 +41,7 @@ public class BotService
         _russianLossesSender = russianLossesSender;
         _russianLossesService = russianLossesService;
         _telemetry = telemetry;
-        _lossesSubscriptionManager = lossesSubscriptionManager;
+        _lossesDailyService = lossesSubscriptionManager;
     }
 
     public async Task Start(CancellationTokenSource cts)
@@ -89,14 +89,14 @@ public class BotService
         if (messageText == "/losses_subscribe")
         {
             //TODO: add time parametes handling
-            _lossesSubscriptionManager.Subscribe(chatId, 12, 0);
-            var str = $"Ви підписались на щоденну розслику втрат русні 😺";
+            _lossesDailyService.OnSubscribe(chatId, 12, 0);
+            var str = $"Ви підписались на щоденну розсилку втрат русні 😺";
             await SendText(message.ReplyToMessage?.MessageId, chatId, str, cancellationToken, null);
             return;
         } else if (messageText == "/losses_unsubscribe")
         {
-            _lossesSubscriptionManager.Unsubscribe(chatId);
-            var str = $"Ви відписались від щоденної розслики втрат русні 😾";
+            _lossesDailyService.OnUnsubscribe(chatId);
+            var str = $"Ви відписались від щоденної розсилки втрат русні 😾";
             await SendText(message.ReplyToMessage?.MessageId, chatId, str, cancellationToken, null);
             return;
         }

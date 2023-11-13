@@ -40,14 +40,13 @@ internal class Program
         builder.Services.AddSingleton<AirAlarmGenericNotifier>();
         builder.Services.AddHostedService<AirAlarmMonitor>();
         builder.Services.AddSingleton<AirAlarmStickerSelector>();
-        builder.Services.AddHostedService<RussianLossesDailyReport>();
+        builder.Services.AddSingleton<RussianLossesDailyReport>();
         builder.Services.AddSingleton<RussianLossesSender>();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddApplicationInsightsTelemetry();
         builder.Services.AddSingleton(_telemetry);
         var DataBaseConnectionString = builder.Configuration.GetValue<string>("BulochkaDBConnectionString");
         builder.Services.AddSingleton(_ => new RussianLossesSubscriptionDataBase(DataBaseConnectionString));
-        builder.Services.AddSingleton<RussianLossesSubscriptionService>();
         var app = builder.Build();
 
         app.UseExceptionHandler("/Error");
