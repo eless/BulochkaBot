@@ -55,7 +55,7 @@ public class RussianLossesSubscriptionDataBase
         }
     }
 
-    public void Subscribe(long chatId, bool enable, byte hour, byte minute)
+    public void Subscribe(SubscriptionData newSub)
     {
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
@@ -73,10 +73,10 @@ public class RussianLossesSubscriptionDataBase
 
             using (SqlCommand cmd = new SqlCommand(mergeQuery, connection))
             {
-                cmd.Parameters.AddWithValue("@ChatId", chatId);
-                cmd.Parameters.AddWithValue("@Subscribed", enable);
-                cmd.Parameters.AddWithValue("@Hour", hour);
-                cmd.Parameters.AddWithValue("@Minute", minute);
+                cmd.Parameters.AddWithValue("@ChatId", newSub.ChatId);
+                cmd.Parameters.AddWithValue("@Subscribed", newSub.Subscribed);
+                cmd.Parameters.AddWithValue("@Hour", newSub.Hour);
+                cmd.Parameters.AddWithValue("@Minute", newSub.Minute);
 
                 cmd.ExecuteNonQuery();
             }

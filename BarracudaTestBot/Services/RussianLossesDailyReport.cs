@@ -8,18 +8,18 @@ namespace BarracudaTestBot.Services
         {
         }
 
+        private class SchedulerMessage : IMessage
+        {
+
+        }
+
         private class SubscribeMessage : IMessage
         {
-            public SubscribeMessage(long chatId, byte hour, byte minute)
+            public SubscribeMessage(SubscriptionData subscription)
             {
-                ChatId = chatId;
-                Hour = hour;
-                Minute = minute;
+                NewSub = subscription;
             }
-
-            public long ChatId { get; }
-            public byte Hour { get; }
-            public byte Minute { get; }
+            public SubscriptionData NewSub;
         }
 
         private class UnsubscribeMessage : IMessage
@@ -38,6 +38,7 @@ namespace BarracudaTestBot.Services
         private RussianLossesSubscriptionDataBase _dataBase;
         private BlockingCollection<IMessage> messageQueue = new BlockingCollection<IMessage>();
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+        private Timer _scheduler;
 
         public RussianLossesDailyReport(RussianLossesService russianLossesService, RussianLossesSender russianLossesSender,
                                         RussianLossesSubscriptionDataBase dataBase)
@@ -55,7 +56,7 @@ namespace BarracudaTestBot.Services
 
         public void OnSubscribe(long chatId, byte hour, byte minute)
         {
-            var sub = new SubscribeMessage(chatId, hour, minute);
+            var sub = new SubscribeMessage(new SubscriptionData(chatId, true, hour, minute));
             SendMessage(sub);
         }
 
@@ -70,27 +71,59 @@ namespace BarracudaTestBot.Services
             cancellationTokenSource.Cancel();
         }
 
+        private void ScheduleTimeCheck(object state)
+        {
+            var checkMsg = new SchedulerMessage();
+            SendMessage(checkMsg);
+        }
+
+        private DateTime GetCurrentKyivTime()
+        {
+            TimeZoneInfo kyivTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
+            DateTime kyivTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, kyivTimeZone);
+            return kyivTime;
+        }
+
         private async Task ProcessMessagesAsync(CancellationToken cancellationToken)
         {
+            _scheduler = new Timer(ScheduleTimeCheck, null, 0, (int)TimeSpan.FromMinutes(1).TotalMilliseconds);
+
             try
             {
                 // Init of the subscribers base at the start.
                 _subscribers = _dataBase.GetAllLossesSubscriptions();
+                // Cache losses data at the start.
+                RussianLossesData losses = await _russianLossesService.GetData();
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     IMessage message = messageQueue.Take(cancellationToken);
 
                     // Process the message based on its type
-                    if (message is SubscribeMessage sub)
+                    if (message is SchedulerMessage)
                     {
-                        _dataBase.Subscribe(sub.ChatId , true, sub.Hour, sub.Minute);
-                        // TODO: add to the _subscribers cache, reinit timers and send logic
+                        var kyivTime = GetCurrentKyivTime();
+                        if (kyivTime.Hour == 10 && kyivTime.Minute == 00)
+                        {
+                            losses = await _russianLossesService.GetData(); // cache new data once a day
+                        }
+                        foreach (var subscriber in _subscribers)
+                        {
+                            if (subscriber.Hour == kyivTime.Hour && subscriber.Minute == kyivTime.Minute)
+                            {
+                                await _russianLossesSender.Send(losses, subscriber.ChatId);
+                            }
+                        }
+                    }
+                    else if (message is SubscribeMessage sub)
+                    {
+                        _dataBase.Subscribe(sub.NewSub);
+                        _subscribers.Add(sub.NewSub);
                     }
                     else if (message is UnsubscribeMessage unsub)
                     {
                         _dataBase.Unsubscribe(unsub.ChatID);
-                        // TODO: remove from the _subscribers cache, reinit timers and send logic
+                        _subscribers.RemoveAll(subscriber => subscriber.ChatId == unsub.ChatID);
                     }
                 }
             }
