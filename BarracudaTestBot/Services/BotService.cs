@@ -5,6 +5,7 @@ using Telegram.Bot;
 using BarracudaTestBot.Checkers;
 using Telegram.Bot.Exceptions;
 using Microsoft.ApplicationInsights;
+using System.Globalization;
 
 namespace BarracudaTestBot.Services;
 
@@ -86,11 +87,23 @@ public class BotService
         System.Diagnostics.Trace.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
         Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
-        if (messageText == "/losses_subscribe")
+        if (messageText.Contains("/losses_subscribe"))
         {
-            //TODO: add time parametes handling
-            _lossesDailyService.OnSubscribe(chatId, 12, 0);
-            var str = $"Ви підписались на щоденну розсилку втрат русні 😺";
+            string[] parts = messageText.Split(' ');
+            byte hour = 12;
+            byte minute = 00;
+            if (parts.Length == 2)
+            {
+                var timeParameter = parts[1];
+                if (DateTime.TryParseExact(timeParameter, "HH:mm", CultureInfo.InvariantCulture, 
+                    DateTimeStyles.None, out DateTime parsedTime))
+                {
+                    hour = (byte)parsedTime.Hour;
+                    minute = (byte)parsedTime.Minute;
+                }
+            }
+            _lossesDailyService.OnSubscribe(chatId, hour, minute);
+            var str = $"Щоденна статистика втрат русні буде приходити о {hour}:{minute} 😺";
             await SendText(message.ReplyToMessage?.MessageId, chatId, str, cancellationToken, null);
             return;
         } else if (messageText == "/losses_unsubscribe")
