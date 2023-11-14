@@ -139,29 +139,3 @@ namespace BarracudaTestBot.Services
         }
     }
 }
-
-// Previous code for the reference TODO: remove when not needed.
-//DateTime kyivReportTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 12, 0, 0);
-//TimeZoneInfo kyivTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
-//DateTime _reportTime = TimeZoneInfo.ConvertTimeToUtc(kyivReportTime, kyivTimeZone);
-
-//DateTime now = DateTime.UtcNow;
-//if (now > _reportTime)
-//{
-//    _reportTime = _reportTime.AddDays(1);
-//}
-//var delay = _reportTime - now;
-//await Task.Delay(delay, cts);
-//using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromDays(1));
-
-//while (!cts.IsCancellationRequested)
-//{
-//    System.Diagnostics.Trace.WriteLine("RussianLossesDailyReport");
-//    var losses = await _russianLossesService.GetData();
-//    //TODO: add time parametes handling
-//    foreach (var chat in _activeChats)
-//    {
-//        await _russianLossesSender.Send(losses, chat.chatId);
-//    }
-//    await timer.WaitForNextTickAsync();
-//}
