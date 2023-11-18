@@ -103,7 +103,7 @@ public class BotService
                 }
             }
             _lossesDailyService.OnSubscribe(chatId, hour, minute);
-            var str = $"Щоденна статистика втрат русні буде приходити о {hour}:{minute} 😺";
+            var str = $"Щоденна статистика втрат русні буде приходити о {hour:D2}:{minute:D2} 😺";
             await SendText(message.ReplyToMessage?.MessageId, chatId, str, cancellationToken, null);
             return;
         } else if (messageText == "/losses_unsubscribe")
