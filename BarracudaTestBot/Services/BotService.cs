@@ -28,8 +28,9 @@ public class BotService
         ["on"] = "ввімкнути бота в чаті",
         ["losses"] = "втрати підарасні на сьогодні",
         ["stickers"] = "команди стікерів",
-        ["losses_subscribe"] = "ввімкнути щоденну розсилку втрат русні в чаті",
-        ["losses_unsubscribe"] = "вимкнути щоденну втрат русні в чаті",
+        ["losses_subscribe"] = "підписатись на щоденну розсилку статитстики",
+        ["losses_unsubscribe"] = "відписатись від щоденної розсилки статистики",
+        ["losses_sub_info"] = "інформація про розсилку",
     };
 
     public BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient,
@@ -92,7 +93,13 @@ public class BotService
             string[] parts = messageText.Split(' ');
             byte hour = 12;
             byte minute = 00;
-            if (parts.Length == 2)
+            var botReply = "Невірний формат команди, спробуйте /losses_subscribe, або /losses_subscribe hh:mm";
+
+            if (parts.Length == 1)
+            {
+                botReply = $"Щоденна статистика втрат русні буде приходити о {12}:{00:D2} 😺";
+                _lossesDailyService.OnSubscribe(chatId, hour, minute);
+            } else if (parts.Length == 2)
             {
                 var timeParameter = parts[1];
                 if (DateTime.TryParseExact(timeParameter, "HH:mm", CultureInfo.InvariantCulture, 
@@ -100,11 +107,11 @@ public class BotService
                 {
                     hour = (byte)parsedTime.Hour;
                     minute = (byte)parsedTime.Minute;
+                    botReply = $"Щоденна статистика втрат русні буде приходити о {hour:D2}:{minute:D2} 😺";
+                    _lossesDailyService.OnSubscribe(chatId, hour, minute);
                 }
             }
-            _lossesDailyService.OnSubscribe(chatId, hour, minute);
-            var str = $"Щоденна статистика втрат русні буде приходити о {hour:D2}:{minute:D2} 😺";
-            await SendText(message.ReplyToMessage?.MessageId, chatId, str, cancellationToken, null);
+            await SendText(message.ReplyToMessage?.MessageId, chatId, botReply, cancellationToken, null);
             return;
         } else if (messageText == "/losses_unsubscribe")
         {
@@ -112,8 +119,17 @@ public class BotService
             var str = $"Ви відписались від щоденної розсилки втрат русні 😾";
             await SendText(message.ReplyToMessage?.MessageId, chatId, str, cancellationToken, null);
             return;
-        }
-        else if (messageText == $"/off")
+        } else if (messageText == "/losses_sub_info")
+        {
+            SubscriptionData info = _lossesDailyService.GetSubscriptionInfo(chatId);
+            var infoStr = "Ви не підписані на розсилку";
+            if (info != null && info.Subscribed)
+            {
+                infoStr = $"Ви підписані на розсилку о {info.Hour:D2}:{info.Minute:D2}";
+            }
+            await SendText(message.ReplyToMessage?.MessageId, chatId, infoStr, cancellationToken, null);
+            return;
+        } else if (messageText == $"/off")
         {
             MutedInChats.Add(chatId);
         } else if(messageText == $"/on")
