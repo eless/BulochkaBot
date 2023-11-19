@@ -14,10 +14,17 @@ namespace BarracudaTestBot.Services
 
         public async void Send()
         {
-            await _botClient.SendStickerAsync(
-                chatId: -1001344803304,
-                sticker: _stickerSelector.GetAllClearSticker());
-            // TODO: add text with alert duration
+            try
+            {
+                await _botClient.SendStickerAsync(
+                    chatId: -1001344803304,
+                    sticker: _stickerSelector.GetAllClearSticker());
+                // TODO: add text with alert duration
+            } catch (Exception ex)
+            {
+
+            }
+
         }
     }
 }
