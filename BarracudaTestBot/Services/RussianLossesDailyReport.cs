@@ -66,6 +66,11 @@ namespace BarracudaTestBot.Services
             SendMessage(unsubscribeMessage);
         }
 
+        public SubscriptionData GetSubscriptionInfo(long chatId)
+        {
+            return _dataBase.GetLossesSubscription(chatId);
+        }
+
         public void Stop()
         {
             cancellationTokenSource.Cancel();
@@ -118,7 +123,16 @@ namespace BarracudaTestBot.Services
                     else if (message is SubscribeMessage sub)
                     {
                         _dataBase.Subscribe(sub.NewSub);
-                        _subscribers.Add(sub.NewSub);
+                        var existingSubscriber = _subscribers.FirstOrDefault(oldSub => oldSub.ChatId == sub.NewSub.ChatId);
+                        if (existingSubscriber != null)
+                        {
+                            int index = _subscribers.IndexOf(existingSubscriber);
+                            _subscribers[index] = sub.NewSub;
+                        }
+                        else
+                        {
+                            _subscribers.Add(sub.NewSub);
+                        }
                     }
                     else if (message is UnsubscribeMessage unsub)
                     {
