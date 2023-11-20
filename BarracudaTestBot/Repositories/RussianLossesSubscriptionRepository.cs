@@ -8,13 +8,18 @@ namespace BarracudaTestBot.Repositories
 
         public async Task Subscribe(RussianLossesSubscription subscription)
         {
-            var existingSubscription = dbContext.RussianLossesSubscriptions
+            var existingSubscription = await dbContext.RussianLossesSubscriptions
                 .SingleOrDefaultAsync(entity => entity.ChatId == subscription.ChatId);
             if (existingSubscription == default)
             {
                 await dbContext.RussianLossesSubscriptions.AddAsync(subscription);
-                await dbContext.SaveChangesAsync();
             }
+            else
+            {
+                existingSubscription.Hour = subscription.Hour;
+                existingSubscription.Minutes = subscription.Minutes;
+            }
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task Unsubscribe(RussianLossesSubscription subscription)
