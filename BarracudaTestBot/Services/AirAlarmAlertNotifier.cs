@@ -1,27 +1,20 @@
-﻿using BarracudaTestBot.Checkers;
-using System.Threading;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace BarracudaTestBot.Services
 {
-    public class AirAlarmAlertNotifier
+    public class AirAlarmAlertNotifier(ITelegramBotClient botClient, AirAlarmStickerSelector stickerSelector)
     {
-        private ITelegramBotClient _botClient;
-        private AirAlarmStickerSelector _stickerSelector;
-        public AirAlarmAlertNotifier(ITelegramBotClient botClient, AirAlarmStickerSelector stickerSelector)
-        {
-            _botClient = botClient;
-            _stickerSelector = stickerSelector;
-        }
+        private readonly ITelegramBotClient _botClient = botClient;
+        private readonly AirAlarmStickerSelector _stickerSelector = stickerSelector;
 
         public async void Send()
         {
             await _botClient.SendStickerAsync(
                 chatId: -1001344803304,
-                sticker: _stickerSelector.GetAlertSticker());
+                sticker: InputFile.FromUri(_stickerSelector.GetAlertSticker()));
             // TODO: add text yobana rusnia or get it from some generator 
-            // maybe add info about time between current allert and last all clear
+            // maybe add info about time between current alert and last all clear
         }
     }
 }

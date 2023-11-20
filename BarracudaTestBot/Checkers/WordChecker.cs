@@ -9,7 +9,7 @@ public class WordChecker
     private readonly StickerChecker _stickerChecker;
     private PutinGenerator _putinGenerator;
 
-    public WordChecker(RussianLossesService russianLossesService, PutinGenerator putinGenerator, StickerChecker stickerChecker) =>
+    public WordChecker(PutinGenerator putinGenerator, StickerChecker stickerChecker) =>
         (_putinGenerator, _stickerChecker) = (putinGenerator, stickerChecker);
 
     protected Dictionary<Regex, Action<List<CommandAnswer>>> Commands => new Dictionary<Regex, Action<List<CommandAnswer>>>

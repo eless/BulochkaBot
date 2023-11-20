@@ -1,16 +1,13 @@
 ﻿using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace BarracudaTestBot.Services
 {
-    public class RussianLossesSender
+    public class RussianLossesSender(ITelegramBotClient botClient)
     {
-        private ITelegramBotClient _botClient;
-        
-        public RussianLossesSender(ITelegramBotClient botClient)
-        {
-            _botClient = botClient;
-        }
+        private readonly ITelegramBotClient _botClient = botClient;
+
         // debug chat id: 512242748
         public async Task Send(RussianLossesData data, long chatId = -1001344803304)
         {
@@ -24,13 +21,13 @@ namespace BarracudaTestBot.Services
             foreach(var sticker in data.stickers.Where(s => !string.IsNullOrEmpty(s))) {
                 await _botClient.SendStickerAsync(
                         chatId: chatId,
-                    sticker: sticker);
+                    sticker: InputFile.FromUri(sticker));
             }
             foreach (var gif in data.animations.Where(g => !string.IsNullOrEmpty(g)))
             {
                 await _botClient.SendAnimationAsync(
                         chatId: chatId,
-                    animation: gif);
+                    animation: InputFile.FromUri(gif));
             }
         }
     }

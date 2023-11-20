@@ -1,5 +1,4 @@
 using BarracudaTestBot.Checkers;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -7,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
+using Microsoft.Azure.Functions.Worker;
 
 namespace BotFunctions
 {
@@ -21,7 +21,7 @@ namespace BotFunctions
             this.wordChecker = wordChecker;
         }
 
-        [FunctionName("LossesFunction")]
+        [Function("LossesFunction")]
         public async Task Run([TimerTrigger("0 0 6 * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"LossesFunction executed at: {DateTime.Now}");
