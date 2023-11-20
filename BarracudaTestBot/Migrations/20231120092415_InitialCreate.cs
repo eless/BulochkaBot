@@ -11,16 +11,18 @@ namespace BarracudaTestBot.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "RussianLossesSubscription",
+                name: "RussianLossesSubscriptions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ChatId = table.Column<long>(type: "bigint", nullable: false)
+                    ChatId = table.Column<long>(type: "bigint", nullable: false),
+                    Hour = table.Column<short>(type: "smallint", nullable: true),
+                    Minutes = table.Column<short>(type: "smallint", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RussianLossesSubscription", x => x.Id);
+                    table.PrimaryKey("PK_RussianLossesSubscriptions", x => x.Id);
                 });
         }
 
@@ -28,7 +30,7 @@ namespace BarracudaTestBot.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "RussianLossesSubscription");
+                name: "RussianLossesSubscriptions");
         }
     }
 }

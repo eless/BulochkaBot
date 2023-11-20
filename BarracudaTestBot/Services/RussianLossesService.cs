@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Text;
 using System.Globalization;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
 
 namespace BarracudaTestBot.Services;
 

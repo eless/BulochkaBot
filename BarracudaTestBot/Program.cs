@@ -3,7 +3,6 @@ using BarracudaTestBot.Services;
 using Telegram.Bot;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Extensions.Configuration;
 using BarracudaTestBot.Database;
 using Microsoft.EntityFrameworkCore;
 

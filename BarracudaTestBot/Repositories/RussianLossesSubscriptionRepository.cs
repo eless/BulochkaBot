@@ -1,31 +1,32 @@
 ﻿using BarracudaTestBot.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace BarracudaTestBot.Repositories
 {
     public class RussianLossesSubscriptionRepository(BotDbContext dbContext)
     {
 
-        public void Subscribe(RussianLossesSubscription subscription)
+        public async Task Subscribe(RussianLossesSubscription subscription)
         {
             var existingSubscription = dbContext.RussianLossesSubscriptions
-                .SingleOrDefault(entity => entity.ChatId == subscription.ChatId);
+                .SingleOrDefaultAsync(entity => entity.ChatId == subscription.ChatId);
             if (existingSubscription == default)
             {
-                dbContext.RussianLossesSubscriptions.Add(subscription);
-                dbContext.SaveChanges();
+                await dbContext.RussianLossesSubscriptions.AddAsync(subscription);
+                await dbContext.SaveChangesAsync();
             }
         }
 
-        public void Unsubscribe(RussianLossesSubscription subscription)
+        public async Task Unsubscribe(RussianLossesSubscription subscription)
         {
             dbContext.RussianLossesSubscriptions.Remove(subscription);
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
         }
 
         public RussianLossesSubscription? GetLossesSubscription(long chatId) =>
             dbContext.RussianLossesSubscriptions
                 .FirstOrDefault(entity => entity.ChatId == chatId);
 
-        public List<RussianLossesSubscription> GetAllLossesSubscriptions() => [.. dbContext.RussianLossesSubscriptions];
+        public async Task<List<RussianLossesSubscription>> GetAllLossesSubscriptions() => await dbContext.RussianLossesSubscriptions.ToListAsync();
     }
 }
