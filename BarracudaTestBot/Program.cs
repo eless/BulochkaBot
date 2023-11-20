@@ -18,8 +18,12 @@ internal class Program
 
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         var builder = WebApplication.CreateBuilder(args);
-
-        builder.Configuration.AddEnvironmentVariables();
+        builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+        {
+            config.AddJsonFile($"appsettings.json", false, true)
+                .AddJsonFile($"appsettings.Local.json", true, true)
+                .AddEnvironmentVariables();
+        });
         builder.Services.AddControllers();
         builder.Services.AddDbContext<BotDbContext>(options => {
             options.UseSqlServer(builder.Configuration.GetConnectionString("BulochkaDBConnectionString"));
