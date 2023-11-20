@@ -34,7 +34,7 @@ namespace BarracudaTestBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RussianLossesSubscription");
+                    b.ToTable("RussianLossesSubscriptions");
                 });
 #pragma warning restore 612, 618
         }

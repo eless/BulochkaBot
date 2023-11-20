@@ -12,6 +12,6 @@ namespace BarracudaTestBot.Database
         {
         }
 
-        public DbSet<RussianLossesSubscription> RussianLossesSubscription { get; set; }
+        public DbSet<RussianLossesSubscription> RussianLossesSubscriptions { get; set; }
     }
 }
