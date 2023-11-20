@@ -3,6 +3,9 @@ using BarracudaTestBot.Services;
 using Telegram.Bot;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Configuration;
+using BarracudaTestBot.Database;
+using Microsoft.EntityFrameworkCore;
 
 internal class Program
 {
@@ -18,6 +21,9 @@ internal class Program
 
         builder.Configuration.AddEnvironmentVariables();
         builder.Services.AddControllers();
+        builder.Services.AddDbContext<BotDbContext>(options => {
+            options.UseSqlServer(builder.Configuration.GetConnectionString("BulochkaDBConnectionString"));
+        });
 
         var token = builder.Configuration.GetValue<string>("TelegramToken");
         builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token));
