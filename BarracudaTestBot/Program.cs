@@ -26,7 +26,7 @@ internal class Program
         });
 
         var token = builder.Configuration.GetValue<string>("TelegramToken");
-        builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token));
+        builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token!));
         builder.Services.AddHostedService<PingService>();
         builder.Services.AddSingleton<BotService>();
         builder.Services.AddSingleton<WordChecker>();
@@ -70,7 +70,7 @@ internal class Program
         app.Run();
         // Send cancellation request to stop bot
         Telemetry.TrackTrace($"app stoped at {DateTime.UtcNow}");
-        cts.Cancel();
+        cts?.Cancel();
     }
 
     static void UnhandledExceptionEventHandler(object sender, UnhandledExceptionEventArgs ex)
