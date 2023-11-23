@@ -2,27 +2,21 @@
 using BarracudaTestBot.Services;
 using Telegram.Bot;
 using Microsoft.ApplicationInsights;
-using Telegram.Bot.Types;
-using System;
-using Microsoft.Extensions.Configuration;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.Channel;
-using Microsoft.Extensions.Hosting;
+using BarracudaTestBot.Database;
+using Microsoft.EntityFrameworkCore;
 
 internal class Program
 {
-    private static TelemetryClient _telemetry;
+    private static TelemetryClient Telemetry => new TelemetryClient(TelemetryConfiguration.CreateDefault());
 
     public static void Main(string[] args)
     {
         // Subscribe to the UnhandledException event
         AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionEventHandler;
-        var configuration = TelemetryConfiguration.CreateDefault();
-        _telemetry = new TelemetryClient(configuration);
 
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         var builder = WebApplication.CreateBuilder(args);
-
         builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
         {
             config.AddJsonFile($"appsettings.json", false, true)
@@ -30,9 +24,12 @@ internal class Program
                 .AddEnvironmentVariables();
         });
         builder.Services.AddControllers();
+        builder.Services.AddDbContext<BotDbContext>(options => {
+            options.UseSqlServer(builder.Configuration.GetConnectionString("BulochkaDBConnectionString"));
+        });
 
         var token = builder.Configuration.GetValue<string>("TelegramToken");
-        builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token));
+        builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token!));
         builder.Services.AddHostedService<PingService>();
         builder.Services.AddSingleton<BotService>();
         builder.Services.AddSingleton<WordChecker>();
@@ -49,7 +46,7 @@ internal class Program
         builder.Services.AddSingleton<RussianLossesSender>();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddApplicationInsightsTelemetry();
-        builder.Services.AddSingleton(_telemetry);
+        builder.Services.AddSingleton(Telemetry);
         
         var app = builder.Build();
 
@@ -72,16 +69,16 @@ internal class Program
             botService.Start(cts);
         }
 
-        _telemetry.TrackTrace($"app starting at {startDate}");
+        Telemetry.TrackTrace($"app starting at {startDate}");
         app.Run();
         // Send cancellation request to stop bot
-        _telemetry.TrackTrace($"app stoped at {DateTime.UtcNow}");
-        cts.Cancel();
+        Telemetry.TrackTrace($"app stoped at {DateTime.UtcNow}");
+        cts?.Cancel();
     }
 
     static void UnhandledExceptionEventHandler(object sender, UnhandledExceptionEventArgs ex)
     {
-        _telemetry.TrackTrace("An unhandled exception occurred: " + ex.ExceptionObject);
-        _telemetry.TrackException((Exception) ex.ExceptionObject);
+        Telemetry.TrackTrace("An unhandled exception occurred: " + ex.ExceptionObject);
+        Telemetry.TrackException((Exception) ex.ExceptionObject);
     }
 }

@@ -8,15 +8,11 @@ using Microsoft.ApplicationInsights;
 
 namespace BarracudaTestBot.Services;
 
-public class BotService
+public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient,
+                  RussianLossesSender russianLossesSender, RussianLossesService russianLossesService,
+                  TelemetryClient telemetry)
 {
     private readonly DateTime _dateOfStart = DateTime.UtcNow;
-    private readonly ITelegramBotClient _botClient;
-    private readonly WordChecker _wordChecker;
-    private readonly StickerChecker _stickerChecker;
-    private RussianLossesSender _russianLossesSender;
-    private RussianLossesService _russianLossesService;
-    private TelemetryClient _telemetry;
 
     List<long> MutedInChats { get; set; } = new List<long>();
 
@@ -28,18 +24,6 @@ public class BotService
         ["stickers"] = "команди стікерів"
     };
 
-    public BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient,
-                      RussianLossesSender russianLossesSender, RussianLossesService russianLossesService,
-                      TelemetryClient telemetry)
-    {
-        _botClient = botClient;
-        _wordChecker = wordChecker;
-        _stickerChecker = stickerChecker;
-        _russianLossesSender = russianLossesSender;
-        _russianLossesService = russianLossesService;
-        _telemetry = telemetry;
-    }
-
     public async Task Start(CancellationTokenSource cts)
     {
         var commands = new List<BotCommand>();
@@ -49,20 +33,20 @@ public class BotService
             command.Command = commandKVP.Key; command.Description = commandKVP.Value;
             commands.Add(command);
         }
-        await _botClient.SetMyCommandsAsync(commands, cancellationToken: cts.Token);
+        await botClient.SetMyCommandsAsync(commands, cancellationToken: cts.Token);
         // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
         var receiverOptions = new ReceiverOptions
         {
             AllowedUpdates = Array.Empty<UpdateType>() // receive all update types
         };
-        _botClient.StartReceiving(
+        botClient.StartReceiving(
             updateHandler: HandleUpdateAsync,
             pollingErrorHandler: HandlePollingErrorAsync,
             receiverOptions: receiverOptions,
             cancellationToken: cts.Token
         );
 
-        var me = await _botClient.GetMeAsync();
+        var me = await botClient.GetMeAsync();
 
         System.Diagnostics.Trace.WriteLine($"Start listening for @{me.Username}");
     }
@@ -91,19 +75,19 @@ public class BotService
         }
         if (MutedInChats.Contains(chatId)) return;
 
-        var commandAnswers = _wordChecker.GetAnswersByCommand(messageText);
+        var commandAnswers = wordChecker.GetAnswersByCommand(messageText);
 
         if (commandAnswers != null)
         {
             SendCommandAnswers(commandAnswers, cancellationToken, message);
         }
 
-        if (_stickerChecker.IsStickerCommand(messageText))
+        if (stickerChecker.IsStickerCommand(messageText))
         {
             await botClient.DeleteMessageAsync(chatId, message.MessageId);
             await botClient.SendStickerAsync(
                 chatId: chatId,
-                sticker: _stickerChecker.GetStickerLink(messageText),
+                sticker: InputFile.FromUri(stickerChecker.GetStickerLink(messageText)),
                 replyToMessageId: message.ReplyToMessage?.MessageId,
                 cancellationToken: cancellationToken);
             return;
@@ -131,13 +115,13 @@ public class BotService
                     {
                         if (commandText.Text == "losses")
                         {
-                            var data = await _russianLossesService.GetData();
-                            await _russianLossesSender.Send(data, message?.Chat?.Id ?? -1001344803304);
+                            var data = await russianLossesService.GetData();
+                            await russianLossesSender.Send(data, message?.Chat?.Id ?? -1001344803304);
                         } else
-                        if (_stickerChecker.IsStickerCommand(commandText.Text))
-                            await _botClient.SendStickerAsync(
+                        if (stickerChecker.IsStickerCommand(commandText.Text))
+                            await botClient.SendStickerAsync(
                                 chatId: message?.Chat?.Id ?? -1001344803304,
-                                sticker: _stickerChecker.GetStickerLink(commandText.Text),
+                                sticker: InputFile.FromUri(stickerChecker.GetStickerLink(commandText.Text)),
                                 cancellationToken: cancellationToken);
                         else
                             await SendText(
@@ -150,7 +134,7 @@ public class BotService
 
     private async Task<Message> SendText(int? replyTo, long chatId, string text,
         CancellationToken cancellationToken, ParseMode? parseMode = ParseMode.MarkdownV2) =>
-            await _botClient.SendTextMessageAsync(
+            await botClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: text,
                 parseMode: parseMode,
@@ -166,7 +150,7 @@ public class BotService
             _ => exception.ToString()
         };
 
-        _telemetry.TrackTrace(ErrorMessage);
+        telemetry.TrackTrace(ErrorMessage);
         return Task.CompletedTask;
     }
 

@@ -2,42 +2,41 @@ using System.Reflection;
 using System.Text;
 using System.Globalization;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
 
 namespace BarracudaTestBot.Services;
 
 public class Data
 {
-    public DateTime date { get; set; }
-    public int day { get; set; }
-    public string resource { get; set; }
-    public Stats stats { get; set; }
-    public Increase increase { get; set; }
+    public required DateTime date { get; set; }
+    public required int day { get; set; }
+    public required string resource { get; set; }
+    public required Stats stats { get; set; }
+    public required Increase increase { get; set; }
 }
 
 public class Increase
 {
-    public int personnel_units { get; set; }
-    public int tanks { get; set; }
-    public int armoured_fighting_vehicles { get; set; }
-    public int artillery_systems { get; set; }
-    public int mlrs { get; set; }
-    public int aa_warfare_systems { get; set; }
-    public int planes { get; set; }
-    public int helicopters { get; set; }
-    public int vehicles_fuel_tanks { get; set; }
-    public int warships_cutters { get; set; }
-    public int cruise_missiles { get; set; }
-    public int uav_systems { get; set; }
-    public int special_military_equip { get; set; }
-    public int atgm_srbm_systems { get; set; }
+    public required int personnel_units { get; set; }
+    public required int tanks { get; set; }
+    public required int armoured_fighting_vehicles { get; set; }
+    public required int artillery_systems { get; set; }
+    public required int mlrs { get; set; }
+    public required int aa_warfare_systems { get; set; }
+    public required int planes { get; set; }
+    public required int helicopters { get; set; }
+    public required int vehicles_fuel_tanks { get; set; }
+    public required int warships_cutters { get; set; }
+    public required int cruise_missiles { get; set; }
+    public required int uav_systems { get; set; }
+    public required int special_military_equip { get; set; }
+    public required int atgm_srbm_systems { get; set; }
 }
 
 // Used https://json2csharp.com/ to generate classes from json
 public class Root
 {
-    public string message { get; set; }
-    public Data data { get; set; }
+    public required string message { get; set; }
+    public required Data data { get; set; }
 }
 
 public class Stats
@@ -108,10 +107,10 @@ public class RussianLossesData
 public class LimitData
 {
     public double Limit { get; set; }
-    public string Smile { get; set; }
+    public required string Smile { get; set; }
     public List<string> Animation = new ();
     public List<string> Sticker = new ();
-    public string Caption { get; set; }
+    public required string Caption { get; set; }
 }
 
 public class RussianLossesService

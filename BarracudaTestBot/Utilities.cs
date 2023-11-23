@@ -1,8 +1,4 @@
-﻿using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types;
-using Telegram.Bot;
-
-namespace BarracudaTestBot
+﻿namespace BarracudaTestBot
 {
     public static class Utilities
     {
