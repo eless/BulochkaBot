@@ -5,7 +5,7 @@ namespace BarracudaTestBot.Services
 {
     public class PutinGenerator
     {
-        private List<string> wordLast = new List<string>() {
+        private readonly List<string> wordLast = [
             "підріла",
             "підр",
             "піздабол",
@@ -26,9 +26,9 @@ namespace BarracudaTestBot.Services
             "валізоходець",
             "гном",
             "хуєсос",
-        };
+        ];
 
-        private List<string> adjectives = new List<string>() {
+        private readonly List<string> adjectives = [
             "мерзенний",
             "паскудний",
             "в попу йобаний",
@@ -52,13 +52,13 @@ namespace BarracudaTestBot.Services
             "йобнутий",
             "хуйовий",
             "скрєпний",
-        };
+        ];
 
-        public string GenerateName()
+        public string GenerateName(string name = "путін")
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder("путін ");
+            System.Text.StringBuilder builder = new($"{name} ");
             int adjectivesCount = Utilities.GetRandomNumber(1, 3);
-            Random rng = new Random();
+            Random rng = new();
             builder.Append(string.Join(" ", adjectives.OrderBy(x => rng.Next()).Take(adjectivesCount)));
             builder.Append($" {wordLast[Utilities.GetRandomNumber(0, wordLast.Count())]}");
             return builder.ToString();
