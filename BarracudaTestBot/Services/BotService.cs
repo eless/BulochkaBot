@@ -5,6 +5,7 @@ using Telegram.Bot;
 using BarracudaTestBot.Checkers;
 using Telegram.Bot.Exceptions;
 using Microsoft.ApplicationInsights;
+using System.Collections.Concurrent;
 
 namespace BarracudaTestBot.Services;
 
@@ -69,7 +70,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         if (messageText == $"/off")
         {
             MutedInChats.Add(chatId);
-        } else if(messageText == $"/on")
+        } else if (messageText == $"/on")
         {
             MutedInChats.Remove(chatId);
         }
@@ -84,7 +85,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
 
         if (stickerChecker.IsStickerCommand(messageText))
         {
-            await botClient.DeleteMessageAsync(chatId, message.MessageId);
+            await botClient.DeleteMessageAsync(chatId, message.MessageId, cancellationToken);
             await botClient.SendStickerAsync(
                 chatId: chatId,
                 sticker: InputFile.FromUri(stickerChecker.GetStickerLink(messageText)),
@@ -101,36 +102,55 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
 
         var answer = message.ReplyToMessage?.MessageId != null ? $"у відповідь: " : "";
 
-        var text = $"@{message?.From?.Username} {answer}{correctMessageText}";
+        var text = $"@{message!.From?.Username} {answer}{correctMessageText}";
 
-        await botClient.DeleteMessageAsync(chatId, message.MessageId);
+        await botClient.DeleteMessageAsync(chatId, message!.MessageId, cancellationToken);
         await SendText(message.ReplyToMessage?.MessageId, chatId, text, cancellationToken, null);
     }
 
-    private void SendCommandAnswers(IEnumerable<CommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null) =>
+    private void SendCommandAnswers(IEnumerable<CommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null)
+    {
+        var exceptions = new ConcurrentQueue<Exception>();
+
         commandAnswers
-                .AsParallel()
+            .AsParallel()
                 .ForAll(
                     async (commandText) =>
                     {
-                        if (commandText.Text == "losses")
+                        try
                         {
-                            var data = await russianLossesService.GetData();
-                            await russianLossesSender.Send(data, message?.Chat?.Id ?? -1001344803304);
-                        } else
-                        if (stickerChecker.IsStickerCommand(commandText.Text))
-                            await botClient.SendStickerAsync(
-                                chatId: message?.Chat?.Id ?? -1001344803304,
-                                sticker: InputFile.FromUri(stickerChecker.GetStickerLink(commandText.Text)),
-                                cancellationToken: cancellationToken);
-                        else
-                            await SendText(
-                                message?.ReplyToMessage?.MessageId,
-                                message?.Chat?.Id ?? -1001344803304,
-                                commandText.Text,
-                                cancellationToken,
-                                commandText.ParseMode);
-                    });
+                            if (commandText.Text == "losses")
+                            {
+                                var data = await russianLossesService.GetData(cancellationToken);
+                                await russianLossesSender.Send(data, message?.Chat?.Id ?? -1001344803304);
+                            }
+                            else
+                            if (stickerChecker.IsStickerCommand(commandText.Text))
+                                await botClient.SendStickerAsync(
+                                    chatId: message?.Chat?.Id ?? -1001344803304,
+                                    sticker: InputFile.FromUri(stickerChecker.GetStickerLink(commandText.Text)),
+                                    cancellationToken: cancellationToken);
+                            else
+                                await SendText(
+                                    message?.ReplyToMessage?.MessageId,
+                                    message?.Chat?.Id ?? -1001344803304,
+                                    commandText.Text,
+                                    cancellationToken,
+                                    commandText.ParseMode);
+                        }
+                        catch (Exception e)
+                        {
+                            exceptions.Enqueue(e);
+                        }
+                    }
+                );
+
+        // Throw the exceptions here after the loop completes.
+        if (!exceptions.IsEmpty)
+        {
+            throw new AggregateException(exceptions);
+        }
+    }
 
     private async Task<Message> SendText(int? replyTo, long chatId, string text,
         CancellationToken cancellationToken, ParseMode? parseMode = ParseMode.MarkdownV2) =>
@@ -149,7 +169,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
                 => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
             _ => exception.ToString()
         };
-
+        Console.WriteLine(ErrorMessage);
         telemetry.TrackTrace(ErrorMessage);
         return Task.CompletedTask;
     }
