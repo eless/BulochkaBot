@@ -165,7 +165,7 @@ public class RussianLossesService
         {
             requestDate = requestDate.AddDays(-1);
             var requestDateStr = requestDate.Date.ToString("yyyy-MM-dd");
-            var res = await _httpClient.GetFromJsonAsync<Root>($"https://russianwarship.rip/api/v1/statistics/{requestDateStr}");
+            var res = await _httpClient.GetFromJsonAsync<Root>($"https://russianwarship.rip/api/v2/statistics/{requestDateStr}");
             if (res != null)
             {
                 previouslosses.Add(res.data);
@@ -189,7 +189,7 @@ public class RussianLossesService
         var data = new RussianLossesData();
         try
         {
-            var losses = await _httpClient.GetFromJsonAsync<Root>("https://russianwarship.rip/api/v1/statistics/latest");
+            var losses = await _httpClient.GetFromJsonAsync<Root>("https://russianwarship.rip/api/v2/statistics/latest");
 
             if (string.IsNullOrEmpty(losses!.message) || losses.message != "The data were fetched successfully.")
             {
