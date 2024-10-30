@@ -17,19 +17,47 @@ internal class Program
 
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         var builder = WebApplication.CreateBuilder(args);
-        builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
-        {
-            config.AddJsonFile($"appsettings.json", false, true)
-                .AddJsonFile($"appsettings.Local.json", true, true)
-                .AddEnvironmentVariables();
-        });
+        builder.Configuration.AddEnvironmentVariables();
         builder.Services.AddControllers();
-        builder.Services.AddDbContext<BotDbContext>(options => {
+        builder.Services.AddDbContext<BotDbContext>(options =>
+        {
             options.UseSqlServer(builder.Configuration.GetConnectionString("BulochkaDBConnectionString"));
         });
 
+        RegisterServices(builder);
+
+        var app = builder.Build();
+
+        app.UseExceptionHandler("/Error");
+        app.UseDeveloperExceptionPage();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+        var startDate = DateTime.UtcNow;
+
+        app.MapGet("/", async context => { await context.Response.WriteAsync($"{app.Environment.ApplicationName} has started at {startDate} UTC. Hallo, Sweetie!"); });
+
+        var botService = app.Services.GetService<BotService>();
+
+        using var cts = new CancellationTokenSource();
+        if (botService != null && cts != null)
+        {
+            botService.Start(cts);
+        }
+
+        Telemetry.TrackTrace($"app starting at {startDate}");
+        app.Run();
+        // Send cancellation request to stop bot
+        Telemetry.TrackTrace($"app stoped at {DateTime.UtcNow}");
+        cts?.Cancel();
+    }
+
+    private static void RegisterServices(WebApplicationBuilder builder)
+    {
         var token = builder.Configuration.GetValue<string>("TelegramToken");
-        builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token!));
+        if (token == null || token == string.Empty) throw new ArgumentNullException("token");
+
+        builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token));
         builder.Services.AddHostedService<PingService>();
         builder.Services.AddSingleton<BotService>();
         builder.Services.AddSingleton<WordChecker>();
@@ -47,38 +75,12 @@ internal class Program
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddApplicationInsightsTelemetry();
         builder.Services.AddSingleton(Telemetry);
-        
-        var app = builder.Build();
-
-        app.UseExceptionHandler("/Error");
-        app.UseDeveloperExceptionPage();
-        app.UseStaticFiles();
-
-        app.UseRouting();
-        var startDate = DateTime.UtcNow;
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapGet("/", async context => { await context.Response.WriteAsync($"{app.Environment.ApplicationName} has started at {startDate} UTC. Hallo, Sweetie!"); });
-        });
-
-        var botService = app.Services.GetService<BotService>();
-
-        using var cts = new CancellationTokenSource();
-        if (botService != null && cts != null)
-        {
-            botService.Start(cts);
-        }
-
-        Telemetry.TrackTrace($"app starting at {startDate}");
-        app.Run();
-        // Send cancellation request to stop bot
-        Telemetry.TrackTrace($"app stoped at {DateTime.UtcNow}");
-        cts?.Cancel();
     }
 
     static void UnhandledExceptionEventHandler(object sender, UnhandledExceptionEventArgs ex)
     {
         Telemetry.TrackTrace("An unhandled exception occurred: " + ex.ExceptionObject);
         Telemetry.TrackException((Exception) ex.ExceptionObject);
+        System.Diagnostics.Trace.WriteLine($"An unhandled exception occurred: {ex.ExceptionObject}");
     }
 }

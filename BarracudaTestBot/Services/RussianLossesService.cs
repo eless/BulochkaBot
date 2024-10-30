@@ -58,41 +58,45 @@ public class Stats
 
     public static Stats operator - (Stats a, Stats b)
     {
-        var res = new Stats();
-        res.personnel_units = a.personnel_units - b.personnel_units;
-        res.tanks = a.tanks - b.tanks;
-        res.armoured_fighting_vehicles = a.armoured_fighting_vehicles - b.armoured_fighting_vehicles;
-        res.artillery_systems = a.artillery_systems - b.artillery_systems;
-        res.mlrs = a.mlrs - b.mlrs;
-        res.aa_warfare_systems = a.aa_warfare_systems - b.aa_warfare_systems;
-        res.planes = a.planes - b.planes;
-        res.helicopters = a.helicopters - b.helicopters;
-        res.vehicles_fuel_tanks = a.vehicles_fuel_tanks - b.vehicles_fuel_tanks;
-        res.warships_cutters = a.warships_cutters - b.warships_cutters;
-        res.cruise_missiles = a.cruise_missiles - b.cruise_missiles;
-        res.uav_systems = a.uav_systems - b.uav_systems;
-        res.special_military_equip = a.special_military_equip - b.special_military_equip;
-        res.atgm_srbm_systems = a.atgm_srbm_systems - b.atgm_srbm_systems;
+        var res = new Stats
+        {
+            personnel_units = a.personnel_units - b.personnel_units,
+            tanks = a.tanks - b.tanks,
+            armoured_fighting_vehicles = a.armoured_fighting_vehicles - b.armoured_fighting_vehicles,
+            artillery_systems = a.artillery_systems - b.artillery_systems,
+            mlrs = a.mlrs - b.mlrs,
+            aa_warfare_systems = a.aa_warfare_systems - b.aa_warfare_systems,
+            planes = a.planes - b.planes,
+            helicopters = a.helicopters - b.helicopters,
+            vehicles_fuel_tanks = a.vehicles_fuel_tanks - b.vehicles_fuel_tanks,
+            warships_cutters = a.warships_cutters - b.warships_cutters,
+            cruise_missiles = a.cruise_missiles - b.cruise_missiles,
+            uav_systems = a.uav_systems - b.uav_systems,
+            special_military_equip = a.special_military_equip - b.special_military_equip,
+            atgm_srbm_systems = a.atgm_srbm_systems - b.atgm_srbm_systems
+        };
         return res;
     }
 
     public static Stats operator + (Stats a, Stats b)
     {
-        var res = new Stats();
-        res.personnel_units = a.personnel_units + b.personnel_units;
-        res.tanks = a.tanks + b.tanks;
-        res.armoured_fighting_vehicles = a.armoured_fighting_vehicles + b.armoured_fighting_vehicles;
-        res.artillery_systems = a.artillery_systems + b.artillery_systems;
-        res.mlrs = a.mlrs + b.mlrs;
-        res.aa_warfare_systems = a.aa_warfare_systems + b.aa_warfare_systems;
-        res.planes = a.planes + b.planes;
-        res.helicopters = a.helicopters + b.helicopters;
-        res.vehicles_fuel_tanks = a.vehicles_fuel_tanks + b.vehicles_fuel_tanks;
-        res.warships_cutters = a.warships_cutters + b.warships_cutters;
-        res.cruise_missiles = a.cruise_missiles + b.cruise_missiles;
-        res.uav_systems = a.uav_systems + b.uav_systems;
-        res.special_military_equip = a.special_military_equip + b.special_military_equip;
-        res.atgm_srbm_systems = a.atgm_srbm_systems + b.atgm_srbm_systems;
+        var res = new Stats
+        {
+            personnel_units = a.personnel_units + b.personnel_units,
+            tanks = a.tanks + b.tanks,
+            armoured_fighting_vehicles = a.armoured_fighting_vehicles + b.armoured_fighting_vehicles,
+            artillery_systems = a.artillery_systems + b.artillery_systems,
+            mlrs = a.mlrs + b.mlrs,
+            aa_warfare_systems = a.aa_warfare_systems + b.aa_warfare_systems,
+            planes = a.planes + b.planes,
+            helicopters = a.helicopters + b.helicopters,
+            vehicles_fuel_tanks = a.vehicles_fuel_tanks + b.vehicles_fuel_tanks,
+            warships_cutters = a.warships_cutters + b.warships_cutters,
+            cruise_missiles = a.cruise_missiles + b.cruise_missiles,
+            uav_systems = a.uav_systems + b.uav_systems,
+            special_military_equip = a.special_military_equip + b.special_military_equip,
+            atgm_srbm_systems = a.atgm_srbm_systems + b.atgm_srbm_systems
+        };
         return res;
     }
 }
@@ -100,30 +104,24 @@ public class Stats
 public class RussianLossesData
 {
     public string units = string.Empty;
-    public List<string> stickers = new ();
-    public List<string> animations = new ();
+    public List<string> stickers = [];
+    public List<string> animations = [];
 }
 
 public class LimitData
 {
     public double Limit { get; set; }
     public required string Smile { get; set; }
-    public List<string> Animation = new ();
-    public List<string> Sticker = new ();
+    public List<string> Animation = [];
+    public List<string> Sticker = [];
     public required string Caption { get; set; }
 }
 
-public class RussianLossesService
+public class RussianLossesService(HttpClient httpClient, TelemetryClient telemetry)
 {
-    private HttpClient _httpClient;
-    private TelemetryClient _telemetry;
-    public RussianLossesService(HttpClient httpClient, TelemetryClient telemetry)
-    {
-        _httpClient = httpClient;
-        _telemetry = telemetry;
-    }
-
-    private readonly Dictionary<string, LimitData> statlimitsInfo = new Dictionary<string, LimitData>
+    private readonly HttpClient _httpClient = httpClient;
+    private readonly TelemetryClient _telemetry = telemetry;
+    private readonly Dictionary<string, LimitData> statlimitsInfo = new()
     {
         ["personnel_units"] = 
             new LimitData() {
@@ -152,8 +150,7 @@ public class RussianLossesService
         ["special_military_equip"] = new LimitData { Caption = "спецтехніка", Smile = "🔥" },
         ["atgm_srbm_systems"] = new LimitData { Caption = "ОТРК", Smile = "🔥" },
     };
-
-    private async Task SetLimits(Root losses)
+    private async Task SetLimits(Root losses, CancellationToken cancellationToken)
     {
         var previouslosses = new List<Data>{ losses.data };
 
@@ -165,7 +162,7 @@ public class RussianLossesService
         {
             requestDate = requestDate.AddDays(-1);
             var requestDateStr = requestDate.Date.ToString("yyyy-MM-dd");
-            var res = await _httpClient.GetFromJsonAsync<Root>($"https://russianwarship.rip/api/v2/statistics/{requestDateStr}");
+            var res = await _httpClient.GetFromJsonAsync<Root>($"{DataApi}/{requestDateStr}", cancellationToken);
             if (res != null)
             {
                 previouslosses.Add(res.data);
@@ -184,12 +181,14 @@ public class RussianLossesService
         }
     }
 
-    public async Task<RussianLossesData> GetData()
+    private readonly string DataApi = "https://russianwarship.rip/api/v2/statistics";
+
+    public async Task<RussianLossesData> GetData(CancellationToken cancellationToken)
     {
-        var data = new RussianLossesData();
         try
         {
-            var losses = await _httpClient.GetFromJsonAsync<Root>("https://russianwarship.rip/api/v2/statistics/latest");
+            var data = new RussianLossesData();
+            var losses = await _httpClient.GetFromJsonAsync<Root>($"{DataApi}/latest", cancellationToken);
 
             if (string.IsNullOrEmpty(losses!.message) || losses.message != "The data were fetched successfully.")
             {
@@ -197,13 +196,13 @@ public class RussianLossesService
             }
             var date = losses.data.date.ToString("dd/MM/yy", CultureInfo.CreateSpecificCulture("en-US"));
             var builder = new StringBuilder($"Втрати на {date}{Environment.NewLine}");
-            await SetLimits(losses);
+            await SetLimits(losses, cancellationToken);
 
             var stats = new List<string>();
 
             var increase = new List<string>();
             double coeficient = 0;
-            var significantStatGif = String.Empty;
+            var significantStatGif = string.Empty;
             var statsInfoType = losses.data.stats.GetType();
             foreach (PropertyInfo stat in losses.data.increase.GetType().GetProperties())
             {
@@ -218,7 +217,7 @@ public class RussianLossesService
                         if (change >= item.Limit)
                         {
                             str.Append(item.Smile);
-                            if (item.Animation.Any())
+                            if (item.Animation.Count != 0)
                             {
                                 var random = new Random();
                                 var index = random.Next(item.Animation.Count);
@@ -258,7 +257,7 @@ public class RussianLossesService
         catch (Exception ex)
         {
             _telemetry.TrackException(ex);
-            return data;
+            throw;
         }
     }
 }

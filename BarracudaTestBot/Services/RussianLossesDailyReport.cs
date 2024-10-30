@@ -30,7 +30,7 @@ namespace BarracudaTestBot.Services
             while (!cts.IsCancellationRequested)
             {
                 System.Diagnostics.Trace.WriteLine("RussianLossesDailyReport");
-                var losses = await _russianLossesService.GetData();
+                var losses = await _russianLossesService.GetData(cts);
                 await _russianLossesSender.Send(losses);
                 await timer.WaitForNextTickAsync();
             }
