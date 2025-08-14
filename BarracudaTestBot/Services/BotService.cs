@@ -5,15 +5,21 @@ using Telegram.Bot;
 using BarracudaTestBot.Checkers;
 using Telegram.Bot.Exceptions;
 using Microsoft.ApplicationInsights;
+using OpenAI.Chat;
 using System.Collections.Concurrent;
 
 namespace BarracudaTestBot.Services;
 
 public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient,
                   RussianLossesSender russianLossesSender, RussianLossesService russianLossesService,
-                  TelemetryClient telemetry)
+                  TelemetryClient telemetry, IConfiguration configuration)
 {
     private readonly DateTime _dateOfStart = DateTime.UtcNow;
+
+    ChatClient client = new(
+      model: "gpt-4.1",
+      apiKey: configuration.GetValue<string>("OPENAI_API_KEY")
+    );
 
     List<long> MutedInChats { get; set; } = new List<long>();
 
@@ -38,7 +44,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
         var receiverOptions = new ReceiverOptions
         {
-            AllowedUpdates = Array.Empty<UpdateType>() // receive all update types
+            AllowedUpdates = [] // receive all update types
         };
         botClient.StartReceiving(
             updateHandler: HandleUpdateAsync,
@@ -108,7 +114,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         await SendText(message.ReplyToMessage?.MessageId, chatId, text, cancellationToken, null);
     }
 
-    private void SendCommandAnswers(IEnumerable<CommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null)
+    private void SendCommandAnswers(IEnumerable<ICommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null) =>
     {
         var exceptions = new ConcurrentQueue<Exception>();
 
@@ -119,6 +125,12 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
                     {
                         try
                         {
+                          
+                            if (commandText.Text == "булочка" && message != null)
+                            {
+                                await SendAIAnswer(commandText, message, cancellationToken);
+                                return;
+                            }
                             if (commandText.Text == "losses")
                             {
                                 var data = await russianLossesService.GetData(cancellationToken);
@@ -150,6 +162,20 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         {
             throw new AggregateException(exceptions);
         }
+    }
+
+    private async Task SendAIAnswer(ICommandAnswer commandText, Message? message, CancellationToken cancellationToken)
+    {
+        var answer = await client.CompleteChatAsync(
+        [
+            new UserChatMessage("ти кіт з ім'ям Булочка, тому відповідай, як ніби ти кіт, але при цьому відповідь має бути правильною", message!.Text)
+        ], cancellationToken: cancellationToken);
+        await SendText(
+            null,
+            message?.Chat?.Id ?? -1001344803304,
+            answer.Value.Content[0].Text,
+            cancellationToken,
+            commandText.ParseMode);
     }
 
     private async Task<Message> SendText(int? replyTo, long chatId, string text,
