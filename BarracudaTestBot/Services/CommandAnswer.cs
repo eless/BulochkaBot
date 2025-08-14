@@ -1,14 +1,19 @@
 ﻿using Telegram.Bot.Types.Enums;
-using static System.Net.Mime.MediaTypeNames;
 
-namespace BarracudaTestBot.Services
+namespace BarracudaTestBot.Services;
+
+public interface ICommandAnswer
 {
-    public class CommandAnswer
-    {
-        public CommandAnswer(string text, ParseMode parseMode) => (Text, ParseMode) = (text, parseMode);
-
-        public string Text { get; set; }
-
-        public ParseMode ParseMode { get; set; }
-    }
+    string Text { get; set; }
+    ParseMode ParseMode { get; set; }
 }
+
+public class CommandAnswer: ICommandAnswer
+{
+    public CommandAnswer(string text, ParseMode parseMode) => (Text, ParseMode) = (text, parseMode);
+
+    public string Text { get; set; }
+
+    public ParseMode ParseMode { get; set; }
+}
+
