@@ -168,7 +168,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
     {
         var answer = await client.CompleteChatAsync(
         [
-            new UserChatMessage("ти кіт з ім'ям Булочка, тому відповідай, як ніби ти кіт, але при цьому відповідь має бути правильною", message!.Text)
+            new UserChatMessage("ти кішка з ім'ям Булочка, тому відповідай, як ніби ти кішка, але при цьому відповідь має бути правильною", message!.Text)
         ], cancellationToken: cancellationToken);
         await SendText(
             null,
