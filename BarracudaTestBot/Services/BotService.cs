@@ -166,9 +166,10 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
 
     private async Task SendAIAnswer(ICommandAnswer commandText, Message? message, CancellationToken cancellationToken)
     {
+        var nowUtc = DateTimeOffset.UtcNow;
         var answer = await client.CompleteChatAsync(
-        [
-            new UserChatMessage("ти кішка з ім'ям Булочка, тому відповідай, як ніби ти кішка, але при цьому відповідь має бути правильною", message!.Text)
+        [   new SystemChatMessage($"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час."),
+            new UserChatMessage(message!.Text)
         ], cancellationToken: cancellationToken);
         await SendText(
             null,
