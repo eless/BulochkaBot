@@ -114,7 +114,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         await SendText(message.ReplyToMessage?.MessageId, chatId, text, cancellationToken, null);
     }
 
-    private void SendCommandAnswers(IEnumerable<ICommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null) =>
+    private void SendCommandAnswers(IEnumerable<ICommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null)
     {
         var exceptions = new ConcurrentQueue<Exception>();
 
