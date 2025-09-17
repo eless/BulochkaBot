@@ -1,16 +1,13 @@
 ﻿
+using Microsoft.ApplicationInsights;
+
 namespace BarracudaTestBot.Services
 {
-    public class RussianLossesDailyReport : BackgroundService
+    public class RussianLossesDailyReport(
+        RussianLossesService russianLossesService,
+        RussianLossesSender russianLossesSender,
+        TelemetryClient telemetry) : BackgroundService
     {
-        private RussianLossesService _russianLossesService;
-        private RussianLossesSender _russianLossesSender;
-
-        public RussianLossesDailyReport(RussianLossesService russianLossesService, RussianLossesSender russianLossesSender)
-        {
-            _russianLossesService = russianLossesService;
-            _russianLossesSender = russianLossesSender;
-        }
 
         protected override async Task ExecuteAsync(CancellationToken cts)
         {
@@ -29,10 +26,23 @@ namespace BarracudaTestBot.Services
 
             while (!cts.IsCancellationRequested)
             {
-                System.Diagnostics.Trace.WriteLine("RussianLossesDailyReport");
-                var losses = await _russianLossesService.GetData(cts);
-                await _russianLossesSender.Send(losses);
-                await timer.WaitForNextTickAsync();
+                try
+                {
+                    System.Diagnostics.Trace.WriteLine("RussianLossesDailyReport");
+                    var losses = await russianLossesService.GetData(cts);
+                    await russianLossesSender.Send(losses);
+                }
+                catch (TaskCanceledException)
+                {
+                    telemetry?.TrackTrace("DAILY REPORT TASK CANCELLED!");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    telemetry?.TrackTrace($"DAILY REPORT FAILED: {ex.Message}");
+                    telemetry?.TrackException(ex);
+                }
+                await timer.WaitForNextTickAsync(cts);
             }
         }
     }

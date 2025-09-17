@@ -17,6 +17,12 @@ internal class Program
 
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         var builder = WebApplication.CreateBuilder(args);
+        var env = builder.Environment;
+        builder.Configuration.AddJsonFile("appsettings.json", false, true);
+        if (env.IsDevelopment())
+        {
+            builder.Configuration.AddJsonFile("appsettings.Dev.json", true, true);
+        }
         builder.Configuration.AddEnvironmentVariables();
         builder.Services.AddControllers();
         builder.Services.AddDbContext<BotDbContext>(options =>
@@ -42,7 +48,9 @@ internal class Program
         using var cts = new CancellationTokenSource();
         if (botService != null && cts != null)
         {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             botService.Start(cts);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         Telemetry.TrackTrace($"app starting at {startDate}");
@@ -55,7 +63,8 @@ internal class Program
     private static void RegisterServices(WebApplicationBuilder builder)
     {
         var token = builder.Configuration.GetValue<string>("TelegramToken");
-        if (token == null || token == string.Empty) throw new ArgumentNullException("token");
+        if (string.IsNullOrWhiteSpace(token))
+            throw new InvalidOperationException("TelegramToken is not configured");
 
         builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token));
         builder.Services.AddHostedService<PingService>();

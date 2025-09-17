@@ -86,7 +86,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
 
         if (commandAnswers != null)
         {
-            SendCommandAnswers(commandAnswers, cancellationToken, message);
+            await SendCommandAnswers(commandAnswers, cancellationToken, message);
         }
 
         if (stickerChecker.IsStickerCommand(messageText))
@@ -114,54 +114,48 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         await SendText(message.ReplyToMessage?.MessageId, chatId, text, cancellationToken, null);
     }
 
-    private void SendCommandAnswers(IEnumerable<ICommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null)
+    private async Task SendCommandAnswers(IEnumerable<ICommandAnswer> commandAnswers, CancellationToken cancellationToken, Message? message = null)
     {
-        var exceptions = new ConcurrentQueue<Exception>();
-
-        commandAnswers
-            .AsParallel()
-                .ForAll(
-                    async (commandText) =>
-                    {
-                        try
-                        {
-                          
-                            if (commandText.Text == "булочка" && message != null)
-                            {
-                                await SendAIAnswer(commandText, message, cancellationToken);
-                                return;
-                            }
-                            if (commandText.Text == "losses")
-                            {
-                                var data = await russianLossesService.GetData(cancellationToken);
-                                await russianLossesSender.Send(data, message?.Chat?.Id ?? -1001344803304);
-                            }
-                            else
-                            if (stickerChecker.IsStickerCommand(commandText.Text))
-                                await botClient.SendStickerAsync(
-                                    chatId: message?.Chat?.Id ?? -1001344803304,
-                                    sticker: InputFile.FromUri(stickerChecker.GetStickerLink(commandText.Text)),
-                                    cancellationToken: cancellationToken);
-                            else
-                                await SendText(
-                                    message?.ReplyToMessage?.MessageId,
-                                    message?.Chat?.Id ?? -1001344803304,
-                                    commandText.Text,
-                                    cancellationToken,
-                                    commandText.ParseMode);
-                        }
-                        catch (Exception e)
-                        {
-                            exceptions.Enqueue(e);
-                        }
-                    }
-                );
-
-        // Throw the exceptions here after the loop completes.
-        if (!exceptions.IsEmpty)
+        var tasks = commandAnswers.Select(async commandText =>
         {
-            throw new AggregateException(exceptions);
-        }
+            try
+            {
+                if (commandText.Text == "булочка" && message != null)
+                {
+                    await SendAIAnswer(commandText, message, cancellationToken);
+                    return;
+                }
+                if (commandText.Text == "losses")
+                {
+                    var data = await russianLossesService.GetData(cancellationToken);
+                    await russianLossesSender.Send(data, message?.Chat?.Id ?? -1001344803304);
+                }
+                else if (stickerChecker.IsStickerCommand(commandText.Text))
+                {
+                    await botClient.SendStickerAsync(
+                        chatId: message?.Chat?.Id ?? -1001344803304,
+                        sticker: InputFile.FromUri(stickerChecker.GetStickerLink(commandText.Text)),
+                        cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    await SendText(
+                        message?.ReplyToMessage?.MessageId,
+                        message?.Chat?.Id ?? -1001344803304,
+                        commandText.Text,
+                        cancellationToken,
+                        commandText.ParseMode);
+                }
+            }
+            catch (Exception e)
+            {
+                telemetry.TrackTrace($"COMMAND FAILED: {e.Message}");
+                telemetry.TrackException(e);
+                throw;
+            }
+        });
+
+        await Task.WhenAll(tasks);
     }
 
     private async Task SendAIAnswer(ICommandAnswer commandText, Message? message, CancellationToken cancellationToken)
