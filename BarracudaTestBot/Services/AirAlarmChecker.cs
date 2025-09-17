@@ -1,6 +1,6 @@
-﻿
-using Microsoft.ApplicationInsights;
+﻿using Microsoft.ApplicationInsights;
 using HtmlAgilityPack;
+using System.Text.RegularExpressions;
 
 namespace BarracudaTestBot.Services
 {
@@ -34,25 +34,21 @@ namespace BarracudaTestBot.Services
                 doc.LoadHtml(content);
 
                 // Find the last mention of "м. Київ" on the page
-                var lastMentionElement = doc.DocumentNode.DescendantsAndSelf()
-                    .Where(e => e.NodeType == HtmlNodeType.Text && e.InnerText.Contains("м. Київ"))
+                var lastMentionElement = doc.DocumentNode.Descendants("div")
+                    .Where(e => e.HasClass("tgme_widget_message_text") &&
+                                Regex.IsMatch(e.InnerText, @"м\.\s*Київ\.?", RegexOptions.IgnoreCase))
                     .LastOrDefault();
 
                 var alert = _KyivAlertActive;
                 if (lastMentionElement != null)
                 {
-                    // Traverse up the DOM tree to find the parent div element containing the message
-                    var messageDiv = lastMentionElement.Ancestors("div").FirstOrDefault();
-                    if (messageDiv != null)
+                    if (Regex.IsMatch(lastMentionElement.InnerText, "Відбій тривоги", RegexOptions.IgnoreCase))
                     {
-                        if (messageDiv.InnerText.Contains("Відбій тривоги"))
-                        {
-                            alert = false;
-                        }
-                        else if (messageDiv.InnerText.Contains("Повітряна тривога"))
-                        {
-                            alert = true;
-                        }
+                        alert = false;
+                    }
+                    else if (Regex.IsMatch(lastMentionElement.InnerText, "Повітряна тривога", RegexOptions.IgnoreCase))
+                    {
+                        alert = true;
                     }
                 }
 
