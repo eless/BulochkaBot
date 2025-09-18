@@ -10,15 +10,15 @@ public class StickerChecker
         ["остановитесь"] = ["CAACAgQAAxkBAAECwMJoyzNJMg17hXAqkwRQVF-rWmHb7AACcQIAAtoNfFGcjIWto_eqBDYE"],
         ["тривога"] =
                 [
-                    "CAACAgQAAxkBAAECwMZoyzNqoOV02OEp4hELoXZdUHXSkwACkAMAAnhP9FFxat0YYJy0JjYE",
-                    "CAACAgQAAxkBAAECwMpoyzOD2ZDNqKyOCuvNakb63qJVjgACJAMAAgNJJFNgFKR-DaHV7DYE",
-                    "CAACAgQAAxkBAAECwM5oyzOiIfcsYb0G0Ejp96LIq6YSowACaAMAAvwa_VGHajyjvtbd2TYE",
+                    "CAACAgIAAxkBAAECwXpoy54YnpKAK1rlyxtSMn3NoxHjggACGRgAAo1z2Uo25GNgK3tadDYE",
+                    "CAACAgIAAxkBAAECwYJoy54dEoijrMR17HnDzotH9cHolAAC6xgAArpDeEkS8aDRxkTaezYE",
+                    "CAACAgIAAxkBAAECwYpoy54k5Wth_rsQk_xglMjT3gQQ5wAC4hgAAm7heUnHD4DFeiep7TYE",
                 ],
         ["відбій"] =
                 [
-                    "CAACAgQAAxkBAAECwNJoyzPHI-wzCrN_fxuxxHBGMW5FqQACggMAAqVg_VEG5parv_aJGjYE",
-                    "CAACAgQAAxkBAAECwNZoyzPLMtS_OhXTAkYZ0nhnVVm10AAClgMAAtDGhVLhDyHzGOsI8DYE",
-                    "CAACAgQAAxkBAAECwL5oyzJ6lWtJTOot7LuZCZZses85rgACtQMAAqtL_FEh41f-Ih1lPDYE",
+                    "CAACAgIAAxkBAAECwX5oy54aAf37llN0IIDwH7wSfmns_gACkxUAAo7_4UpAXuQxTq2p0zYE",
+                    "CAACAgIAAxkBAAECwYZoy54gKcvNSFYQRvztkfUP3xSBzwACsRcAAkV4gUltA6qv5jdGtjYE",
+                    "CAACAgIAAxkBAAECwY5oy54mM9ms4b_LDLuk6kxaMLPFVAACzRcAAkCReUmw2Y-R4Z09MTYE",
                 ]
     };
 
