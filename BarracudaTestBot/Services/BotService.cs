@@ -92,11 +92,19 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         if (stickerChecker.IsStickerCommand(messageText))
         {
             await botClient.DeleteMessageAsync(chatId, message.MessageId, cancellationToken);
-            await botClient.SendStickerAsync(
-                chatId: chatId,
-                sticker: InputFile.FromFileId(stickerChecker.GetStickerLink(messageText)),
-                replyToMessageId: message.ReplyToMessage?.MessageId,
-                cancellationToken: cancellationToken);
+            var fileId = stickerChecker.GetStickerLink(messageText);
+            try
+            {
+                await botClient.SendStickerAsync(
+                    chatId: chatId,
+                    sticker: InputFile.FromFileId(fileId),
+                    replyToMessageId: message.ReplyToMessage?.MessageId,
+                    cancellationToken: cancellationToken);
+            } catch(Exception ex)
+            {
+                telemetry.TrackTrace($"Bot Service, sticker {messageText} send failed, id: {fileId}");
+                telemetry.TrackException(ex);
+            }
             return;
         }
 
@@ -132,10 +140,19 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
                 }
                 else if (stickerChecker.IsStickerCommand(commandText.Text))
                 {
-                    await botClient.SendStickerAsync(
-                        chatId: message?.Chat?.Id ?? -1001344803304,
-                        sticker: InputFile.FromFileId(stickerChecker.GetStickerLink(commandText.Text)),
-                        cancellationToken: cancellationToken);
+                    var fileId = stickerChecker.GetStickerLink(commandText.Text);
+                    try
+                    {
+                        await botClient.SendStickerAsync(
+                            chatId: message?.Chat?.Id ?? -1001344803304,
+                            sticker: InputFile.FromFileId(fileId),
+                            cancellationToken: cancellationToken);
+
+                    } catch(Exception ex)
+                    {
+                        telemetry.TrackTrace($"Bot Service, command {commandText.Text} send failed, id: {fileId}");
+                        telemetry.TrackException(ex);
+                    }
                 }
                 else
                 {

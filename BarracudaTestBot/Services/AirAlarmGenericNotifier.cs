@@ -1,14 +1,18 @@
-﻿namespace BarracudaTestBot.Services
+﻿using Microsoft.ApplicationInsights;
+namespace BarracudaTestBot.Services
 {
     public class AirAlarmGenericNotifier
     {
         private AirAlarmAlertNotifier _alertNotifier;
         private AirAlarmAllClearNotifier _allClearNotifier;
+        private TelemetryClient _telemetry;
 
-        public AirAlarmGenericNotifier(AirAlarmAlertNotifier alertNotifier, AirAlarmAllClearNotifier allClearNotifier)
+        public AirAlarmGenericNotifier(AirAlarmAlertNotifier alertNotifier, AirAlarmAllClearNotifier allClearNotifier,
+                                       TelemetryClient telemetry)
         {
             _alertNotifier = alertNotifier;
             _allClearNotifier = allClearNotifier;
+            _telemetry = telemetry;
         }
 
         public void notify(AirAlarmChecker.AlertStatus status)
@@ -24,7 +28,7 @@
                     break;
 
                 case AirAlarmChecker.AlertStatus.FatalError:
-                    // TODO: add some trace log, or throw a text error in chat
+                    _telemetry.TrackTrace("AlertStatus.FatalError");
                     break;
 
                 default:
