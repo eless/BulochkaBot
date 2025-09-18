@@ -179,7 +179,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
     {
         var nowUtc = DateTimeOffset.UtcNow;
         var answer = await client.CompleteChatAsync(
-        [   new SystemChatMessage($"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час."),
+        [   new SystemChatMessage($"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час. Проте пиши дату в повідомленні. лише у випадках, коли тебе прямо просять про це."),
             new UserChatMessage(message!.Text)
         ], cancellationToken: cancellationToken);
         await SendText(
