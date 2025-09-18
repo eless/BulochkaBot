@@ -94,7 +94,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
             await botClient.DeleteMessageAsync(chatId, message.MessageId, cancellationToken);
             await botClient.SendStickerAsync(
                 chatId: chatId,
-                sticker: InputFile.FromUri(stickerChecker.GetStickerLink(messageText)),
+                sticker: InputFile.FromFileId(stickerChecker.GetStickerLink(messageText)),
                 replyToMessageId: message.ReplyToMessage?.MessageId,
                 cancellationToken: cancellationToken);
             return;
@@ -134,7 +134,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
                 {
                     await botClient.SendStickerAsync(
                         chatId: message?.Chat?.Id ?? -1001344803304,
-                        sticker: InputFile.FromUri(stickerChecker.GetStickerLink(commandText.Text)),
+                        sticker: InputFile.FromFileId(stickerChecker.GetStickerLink(commandText.Text)),
                         cancellationToken: cancellationToken);
                 }
                 else

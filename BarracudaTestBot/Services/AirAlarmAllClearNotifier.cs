@@ -10,6 +10,6 @@ namespace BarracudaTestBot.Services
 
         public async void Send() => await _botClient.SendStickerAsync(
                 chatId: -1001344803304,
-                sticker: InputFile.FromUri(_stickerSelector.GetAllClearSticker()));// TODO: add text with alert duration
+                sticker: InputFile.FromFileId(_stickerSelector.GetAllClearSticker()));// TODO: add text with alert duration
     }
 }

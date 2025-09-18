@@ -14,7 +14,7 @@ namespace BarracudaTestBot.Services
             {
                 await _botClient.SendStickerAsync(
                     chatId: -1001344803304,
-                    sticker: InputFile.FromUri(_stickerSelector.GetAlertSticker()));
+                    sticker: InputFile.FromFileId(_stickerSelector.GetAlertSticker()));
                 // TODO: add text yobana rusnia or get it from some generator 
                 // maybe add info about time between current alert and last all clear
 
