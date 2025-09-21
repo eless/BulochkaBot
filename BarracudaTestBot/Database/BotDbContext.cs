@@ -13,5 +13,6 @@ namespace BarracudaTestBot.Database
         }
 
         public DbSet<RussianLossesSubscription> RussianLossesSubscriptions { get; set; }
+        public DbSet<Sticker> Stickers { get; set; }
     }
 }

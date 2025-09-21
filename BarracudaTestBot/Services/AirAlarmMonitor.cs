@@ -1,6 +1,4 @@
 ﻿using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
-using Telegram.Bot.Types;
 
 namespace BarracudaTestBot.Services
 {
