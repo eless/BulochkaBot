@@ -25,14 +25,14 @@ public class RussianLossesSubscriptionRepository(BotDbContext dbContext)
     public async Task Unsubscribe(long chatId)
     {
         var subscription = await dbContext.RussianLossesSubscriptions
-            .FirstOrDefaultAsync(entity => entity.ChatId == chatId);
+            .Where(entity => entity.ChatId == chatId)
+            .ToListAsync();
         if (subscription != default)
         {
-            dbContext.RussianLossesSubscriptions.Remove(subscription);
+            dbContext.RussianLossesSubscriptions.RemoveRange(subscription);
         }
         await dbContext.SaveChangesAsync();
     }
-
     public async Task<RussianLossesSubscription?> GetLossesSubscription(long chatId) =>
         await dbContext.RussianLossesSubscriptions
             .FirstOrDefaultAsync(entity => entity.ChatId == chatId);
