@@ -1,4 +1,5 @@
-﻿using BarracudaTestBot.Database;
+﻿using System.Threading.Tasks;
+using BarracudaTestBot.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarracudaTestBot.Repositories
@@ -22,16 +23,22 @@ namespace BarracudaTestBot.Repositories
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task Unsubscribe(RussianLossesSubscription subscription)
+        public async Task Unsubscribe(long chatId)
         {
-            dbContext.RussianLossesSubscriptions.Remove(subscription);
+            var subscription = await dbContext.RussianLossesSubscriptions
+                .FirstOrDefaultAsync(entity => entity.ChatId == chatId);
+            if (subscription != default)
+            {
+                dbContext.RussianLossesSubscriptions.Remove(subscription);
+            }
             await dbContext.SaveChangesAsync();
         }
 
-        public RussianLossesSubscription? GetLossesSubscription(long chatId) =>
-            dbContext.RussianLossesSubscriptions
-                .FirstOrDefault(entity => entity.ChatId == chatId);
+        public async Task<RussianLossesSubscription?> GetLossesSubscription(long chatId) =>
+            await dbContext.RussianLossesSubscriptions
+                .FirstOrDefaultAsync(entity => entity.ChatId == chatId);
 
-        public async Task<List<RussianLossesSubscription>> GetAllLossesSubscriptions() => await dbContext.RussianLossesSubscriptions.ToListAsync();
+        public IAsyncEnumerable<RussianLossesSubscription> GetAllLossesSubscriptions() =>
+            dbContext.RussianLossesSubscriptions.AsAsyncEnumerable();
     }
 }
