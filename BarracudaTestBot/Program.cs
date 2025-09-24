@@ -5,6 +5,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using BarracudaTestBot.Database;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 internal class Program
 {
@@ -27,7 +28,7 @@ internal class Program
         builder.Services.AddControllers();
         builder.Services.AddDbContext<BotDbContext>(options =>
         {
-            options.UseSqlServer(builder.Configuration.GetConnectionString("BulochkaDBConnectionString"));
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
         });
 
         RegisterServices(builder);
