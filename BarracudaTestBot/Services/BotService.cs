@@ -5,28 +5,15 @@ using Telegram.Bot;
 using BarracudaTestBot.Checkers;
 using Telegram.Bot.Exceptions;
 using Microsoft.ApplicationInsights;
-using OpenAI.Chat;
-using System.ClientModel;
 using System.Collections.Concurrent;
 
 namespace BarracudaTestBot.Services;
 
 public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient,
                   RussianLossesSender russianLossesSender, RussianLossesService russianLossesService,
-                  TelemetryClient telemetry, IConfiguration configuration)
+                  TelemetryClient telemetry, AiChatService aiChat)
 {
     private readonly DateTime _dateOfStart = DateTime.UtcNow;
-
-    // When OpenAI rejects requests because the account has no credits, AI answers are paused
-    // until this moment so the rest of the bot keeps working and OpenAI is not hammered.
-    private static readonly TimeSpan AiPauseAfterQuotaError = TimeSpan.FromHours(1);
-    private DateTime _aiPausedUntil = DateTime.MinValue;
-    private bool IsAiPaused => DateTime.UtcNow < _aiPausedUntil;
-
-    ChatClient client = new(
-      model: "gpt-4.1",
-      apiKey: configuration.GetValue<string>("OPENAI_API_KEY")
-    );
 
     List<long> MutedInChats { get; set; } = new List<long>();
 
@@ -203,35 +190,19 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
 
     private async Task SendAIAnswer(ICommandAnswer commandText, Message? message, CancellationToken cancellationToken)
     {
-        if (IsAiPaused) return;
+        if (!aiChat.HasProviders || message?.Text == null) return;
 
         var nowUtc = DateTimeOffset.UtcNow;
-        ClientResult<ChatCompletion> answer;
-        try
-        {
-            answer = await client.CompleteChatAsync(
-            [   new SystemChatMessage($"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час. Проте пиши дату в повідомленні. лише у випадках, коли тебе прямо просять про це."),
-                new UserChatMessage(message!.Text)
-            ], cancellationToken: cancellationToken);
-        }
-        catch (ClientResultException ex) when (ex.Status == 429)
-        {
-            // Out of credits or rate limited: skip AI answers for a while, keep everything else running.
-            _aiPausedUntil = DateTime.UtcNow + AiPauseAfterQuotaError;
-            telemetry.TrackTrace($"OpenAI unavailable (HTTP 429), AI answers paused until {_aiPausedUntil:u}: {ex.Message}");
-            return;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            telemetry.TrackTrace($"OpenAI request failed, AI answer skipped: {ex.Message}");
-            telemetry.TrackException(ex);
-            return;
-        }
+        var systemPrompt = $"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час. Проте пиши дату в повідомленні. лише у випадках, коли тебе прямо просять про це.";
+
+        // Null means every provider is out of quota or failed; the bot just stays quiet.
+        var answer = await aiChat.CompleteAsync(systemPrompt, message.Text, cancellationToken);
+        if (answer == null) return;
 
         await SendText(
             null,
-            message?.Chat?.Id ?? -1001344803304,
-            answer.Value.Content[0].Text,
+            message.Chat.Id,
+            answer,
             cancellationToken,
             commandText.ParseMode);
     }
