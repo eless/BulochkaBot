@@ -69,6 +69,7 @@ internal class Program
 
         builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token));
         builder.Services.AddHostedService<PingService>();
+        builder.Services.AddSingleton<AiChatService>();
         builder.Services.AddSingleton<BotService>();
         builder.Services.AddSingleton<WordChecker>();
         builder.Services.AddSingleton<StickerChecker>();
