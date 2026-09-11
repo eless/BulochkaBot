@@ -6,6 +6,7 @@ using BarracudaTestBot.Checkers;
 using Telegram.Bot.Exceptions;
 using Microsoft.ApplicationInsights;
 using OpenAI.Chat;
+using System.ClientModel;
 using System.Collections.Concurrent;
 
 namespace BarracudaTestBot.Services;
@@ -15,6 +16,12 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
                   TelemetryClient telemetry, IConfiguration configuration)
 {
     private readonly DateTime _dateOfStart = DateTime.UtcNow;
+
+    // When OpenAI rejects requests because the account has no credits, AI answers are paused
+    // until this moment so the rest of the bot keeps working and OpenAI is not hammered.
+    private static readonly TimeSpan AiPauseAfterQuotaError = TimeSpan.FromHours(1);
+    private DateTime _aiPausedUntil = DateTime.MinValue;
+    private bool IsAiPaused => DateTime.UtcNow < _aiPausedUntil;
 
     ChatClient client = new(
       model: "gpt-4.1",
@@ -59,6 +66,25 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
     }
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await HandleUpdateCoreAsync(update, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // An exception escaping the update handler stops Telegram.Bot polling for good,
+            // so every failure must be contained here.
+            telemetry.TrackTrace($"UPDATE HANDLING FAILED: {ex.Message}");
+            telemetry.TrackException(ex);
+        }
+    }
+
+    private async Task HandleUpdateCoreAsync(Update update, CancellationToken cancellationToken)
     {
         if (update.Message?.Date < _dateOfStart) return;
 
@@ -177,11 +203,31 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
 
     private async Task SendAIAnswer(ICommandAnswer commandText, Message? message, CancellationToken cancellationToken)
     {
+        if (IsAiPaused) return;
+
         var nowUtc = DateTimeOffset.UtcNow;
-        var answer = await client.CompleteChatAsync(
-        [   new SystemChatMessage($"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час. Проте пиши дату в повідомленні. лише у випадках, коли тебе прямо просять про це."),
-            new UserChatMessage(message!.Text)
-        ], cancellationToken: cancellationToken);
+        ClientResult<ChatCompletion> answer;
+        try
+        {
+            answer = await client.CompleteChatAsync(
+            [   new SystemChatMessage($"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час. Проте пиши дату в повідомленні. лише у випадках, коли тебе прямо просять про це."),
+                new UserChatMessage(message!.Text)
+            ], cancellationToken: cancellationToken);
+        }
+        catch (ClientResultException ex) when (ex.Status == 429)
+        {
+            // Out of credits or rate limited: skip AI answers for a while, keep everything else running.
+            _aiPausedUntil = DateTime.UtcNow + AiPauseAfterQuotaError;
+            telemetry.TrackTrace($"OpenAI unavailable (HTTP 429), AI answers paused until {_aiPausedUntil:u}: {ex.Message}");
+            return;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            telemetry.TrackTrace($"OpenAI request failed, AI answer skipped: {ex.Message}");
+            telemetry.TrackException(ex);
+            return;
+        }
+
         await SendText(
             null,
             message?.Chat?.Id ?? -1001344803304,
