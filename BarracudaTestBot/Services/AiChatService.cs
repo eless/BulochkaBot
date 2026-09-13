@@ -6,7 +6,7 @@ using OpenAI.Chat;
 namespace BarracudaTestBot.Services;
 
 /// <summary>
-/// Chat completion over a chain of OpenAI-compatible providers (Groq, Gemini, OpenAI).
+/// Chat completion over a chain of OpenAI-compatible providers (Gemini, Groq, OpenAI).
 /// Providers are tried in order; one that answers 429 (quota / rate limit) is paused for a while
 /// and the next one is used. Returns null when nobody can answer, so the bot simply stays quiet.
 /// </summary>
@@ -31,11 +31,11 @@ public class AiChatService
     {
         _telemetry = telemetry;
 
-        // Order matters: free tiers first, paid OpenAI as the last resort.
-        AddProvider("Groq", configuration, "GROQ_API_KEY", "GROQ_MODEL", "openai/gpt-oss-120b",
-            new Uri("https://api.groq.com/openai/v1"));
+        // Order matters: Gemini first, Groq as fallback, paid OpenAI last.
         AddProvider("Gemini", configuration, "GEMINI_API_KEY", "GEMINI_MODEL", "gemini-3.5-flash-lite",
             new Uri("https://generativelanguage.googleapis.com/v1beta/openai/"));
+        AddProvider("Groq", configuration, "GROQ_API_KEY", "GROQ_MODEL", "openai/gpt-oss-120b",
+            new Uri("https://api.groq.com/openai/v1"));
         AddProvider("OpenAI", configuration, "OPENAI_API_KEY", "OPENAI_MODEL", "gpt-4.1", endpoint: null);
 
         _telemetry.TrackTrace(HasProviders
