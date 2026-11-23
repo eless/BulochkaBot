@@ -180,7 +180,10 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
             }
             catch (Exception e)
             {
-                telemetry.TrackTrace($"COMMAND FAILED: {e.Message}");
+                var context = message is null
+                    ? "message=null"
+                    : FormatAiMessageContext(message);
+                telemetry.TrackTrace($"COMMAND FAILED: {e.Message}; {context}");
                 telemetry.TrackException(e);
                 throw;
             }
@@ -228,7 +231,8 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
             }
             catch (Exception ex)
             {
-                telemetry.TrackTrace($"AI history load failed: {ex.Message}");
+                telemetry.TrackTrace(
+                    $"AI history load failed: {ex.Message}; {FormatAiMessageContext(message)}");
                 telemetry.TrackException(ex);
             }
         }
@@ -261,7 +265,8 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         }
         catch (Exception ex)
         {
-            telemetry.TrackTrace($"AI answer send failed: {ex.Message}");
+            telemetry.TrackTrace(
+                $"AI answer send failed: {ex.Message}; {FormatAiMessageContext(message)}; answerLength={replyText.Length}");
             telemetry.TrackException(ex);
             return;
         }
@@ -294,10 +299,14 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         }
         catch (Exception ex)
         {
-            telemetry.TrackTrace($"AI history save failed: {ex.Message}");
+            telemetry.TrackTrace(
+                $"AI history save failed: {ex.Message}; {FormatAiMessageContext(message)}; sentMessageId={sent.MessageId}; historyReplyToMessageId={historyReplyToMessageId?.ToString() ?? "null"}");
             telemetry.TrackException(ex);
         }
     }
+
+    private static string FormatAiMessageContext(Message message) =>
+        $"chatId={message.Chat.Id}; messageId={message.MessageId}; replyToMessageId={message.ReplyToMessage?.MessageId?.ToString() ?? "null"}";
 
     private static string? FormatTelegramAuthorName(User? user) => user switch
     {
