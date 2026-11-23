@@ -4,8 +4,8 @@ using Telegram.Bot;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using BarracudaTestBot.Database;
+using BarracudaTestBot.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 internal class Program
 {
@@ -26,14 +26,24 @@ internal class Program
         }
         builder.Configuration.AddEnvironmentVariables();
         builder.Services.AddControllers();
-        builder.Services.AddDbContext<BotDbContext>(options =>
+
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured");
+
+        builder.Services.AddDbContextFactory<BotDbContext>(options =>
         {
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+            options.UseNpgsql(connectionString);
         });
 
         RegisterServices(builder);
 
         var app = builder.Build();
+
+        using (var db = app.Services.GetRequiredService<IDbContextFactory<BotDbContext>>().CreateDbContext())
+        {
+            db.Database.Migrate();
+        }
 
         app.UseExceptionHandler("/Error");
         app.UseDeveloperExceptionPage();
@@ -70,6 +80,7 @@ internal class Program
         builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(token));
         builder.Services.AddHostedService<PingService>();
         builder.Services.AddSingleton<AiChatService>();
+        builder.Services.AddSingleton<AiChatMessageRepository>();
         builder.Services.AddSingleton<BotService>();
         builder.Services.AddSingleton<WordChecker>();
         builder.Services.AddSingleton<StickerChecker>();

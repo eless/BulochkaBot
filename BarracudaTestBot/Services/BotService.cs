@@ -3,15 +3,16 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 using Telegram.Bot;
 using BarracudaTestBot.Checkers;
+using BarracudaTestBot.Database;
+using BarracudaTestBot.Repositories;
 using Telegram.Bot.Exceptions;
 using Microsoft.ApplicationInsights;
-using System.Collections.Concurrent;
 
 namespace BarracudaTestBot.Services;
 
 public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, ITelegramBotClient botClient,
                   RussianLossesSender russianLossesSender, RussianLossesService russianLossesService,
-                  TelemetryClient telemetry, AiChatService aiChat)
+                  TelemetryClient telemetry, AiChatService aiChat, AiChatMessageRepository aiChatMessages)
 {
     private readonly DateTime _dateOfStart = DateTime.UtcNow;
 
@@ -188,23 +189,88 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         await Task.WhenAll(tasks);
     }
 
-    private async Task SendAIAnswer(ICommandAnswer commandText, Message? message, CancellationToken cancellationToken)
+    private async Task SendAIAnswer(ICommandAnswer commandText, Message message, CancellationToken cancellationToken)
     {
-        if (!aiChat.HasProviders || message?.Text == null) return;
+        if (!aiChat.HasProviders || message.Text is null) return;
 
         var nowUtc = DateTimeOffset.UtcNow;
         var systemPrompt = $"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час. Проте пиши дату в повідомленні. лише у випадках, коли тебе прямо просять про це.";
 
+        var authorName = message.From?.Username is { Length: > 0 } username
+            ? $"@{username}"
+            : message.From?.FirstName;
+
+        var conversation = new List<AiConversationTurn>();
+
+        if (message.ReplyToMessage?.MessageId is int replyToMessageId)
+        {
+            var history = await aiChatMessages.GetReplyChainAsync(
+                message.Chat.Id, replyToMessageId, cancellationToken);
+
+            foreach (var item in history)
+            {
+                conversation.Add(new AiConversationTurn
+                {
+                    Role = item.Role switch
+                    {
+                        "assistant" => AiConversationRole.Assistant,
+                        _ => AiConversationRole.User
+                    },
+                    Content = item.Text,
+                    AuthorName = item.AuthorName
+                });
+            }
+        }
+
+        conversation.Add(new AiConversationTurn
+        {
+            Role = AiConversationRole.User,
+            Content = message.Text,
+            AuthorName = authorName
+        });
+
         // Null means every provider is out of quota or failed; the bot just stays quiet.
-        var answer = await aiChat.CompleteAsync(systemPrompt, message.Text, cancellationToken);
+        var answer = await aiChat.CompleteAsync(systemPrompt, conversation, cancellationToken);
         if (answer == null) return;
 
-        await SendText(
-            null,
+        var sent = await SendText(
+            message.MessageId,
             message.Chat.Id,
             answer,
             cancellationToken,
             commandText.ParseMode);
+
+        try
+        {
+            var createdAt = DateTimeOffset.UtcNow;
+            await aiChatMessages.SaveExchangeAsync(
+                new AiChatMessage
+                {
+                    ChatId = message.Chat.Id,
+                    MessageId = message.MessageId,
+                    ReplyToMessageId = message.ReplyToMessage?.MessageId,
+                    Role = "user",
+                    Text = message.Text,
+                    AuthorName = authorName,
+                    CreatedAt = createdAt
+                },
+                new AiChatMessage
+                {
+                    ChatId = message.Chat.Id,
+                    MessageId = sent.MessageId,
+                    ReplyToMessageId = message.MessageId,
+                    Role = "assistant",
+                    Text = answer,
+                    AuthorName = null,
+                    CreatedAt = createdAt
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            telemetry.TrackTrace($"AI history save failed: {ex.Message}");
+            telemetry.TrackException(ex);
+        }
     }
 
     private async Task<Message> SendText(int? replyTo, long chatId, string text,
