@@ -24,6 +24,7 @@ public class AiChatMessageRepository(IDbContextFactory<BotDbContext> dbContextFa
                     m => m.ChatId == chatId && m.MessageId == messageId,
                     cancellationToken);
 
+            // Parent was never an AI turn (or was pruned) — keep what we already collected.
             if (message is null) break;
 
             chain.Add(message);
@@ -38,6 +39,18 @@ public class AiChatMessageRepository(IDbContextFactory<BotDbContext> dbContextFa
         AiChatMessage userMessage, AiChatMessage assistantMessage, CancellationToken cancellationToken)
     {
         await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        // Don't keep a dangling reply link to a message the bot never stored.
+        if (userMessage.ReplyToMessageId is int replyToMessageId)
+        {
+            var parentExists = await db.AiChatMessages
+                .AsNoTracking()
+                .AnyAsync(
+                    m => m.ChatId == userMessage.ChatId && m.MessageId == replyToMessageId,
+                    cancellationToken);
+            if (!parentExists)
+                userMessage.ReplyToMessageId = null;
+        }
 
         db.AiChatMessages.Add(userMessage);
         db.AiChatMessages.Add(assistantMessage);
