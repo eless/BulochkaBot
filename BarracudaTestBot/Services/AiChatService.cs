@@ -58,9 +58,27 @@ public class AiChatService
         _providers.Add(new Provider($"{name}/{model}", new ChatClient(model, new ApiKeyCredential(apiKey), options)));
     }
 
-    public async Task<string?> CompleteAsync(string systemPrompt, string userMessage, CancellationToken cancellationToken)
+    public async Task<string?> CompleteAsync(
+        string systemPrompt,
+        IReadOnlyList<AiConversationTurn> conversation,
+        CancellationToken cancellationToken)
     {
-        ChatMessage[] messages = [new SystemChatMessage(systemPrompt), new UserChatMessage(userMessage)];
+        if (conversation.Count == 0) return null;
+
+        var messages = new List<ChatMessage>(conversation.Count + 1)
+        {
+            new SystemChatMessage(systemPrompt)
+        };
+
+        foreach (var turn in conversation)
+        {
+            messages.Add(turn.Role switch
+            {
+                AiConversationRole.User => new UserChatMessage(FormatUserContent(turn)),
+                AiConversationRole.Assistant => new AssistantChatMessage(turn.Content),
+                _ => throw new ArgumentOutOfRangeException(nameof(conversation), turn.Role, "Unknown AI conversation role")
+            });
+        }
 
         foreach (var provider in _providers.Where(p => !p.IsPaused))
         {
@@ -87,4 +105,20 @@ public class AiChatService
         _telemetry.TrackTrace("No AI provider could answer, AI answer skipped");
         return null;
     }
+
+    private static string FormatUserContent(AiConversationTurn turn) =>
+        string.IsNullOrWhiteSpace(turn.AuthorName) ? turn.Content : $"{turn.AuthorName}: {turn.Content}";
+}
+
+public enum AiConversationRole
+{
+    User,
+    Assistant
+}
+
+public sealed class AiConversationTurn
+{
+    public required AiConversationRole Role { get; init; }
+    public required string Content { get; init; }
+    public string? AuthorName { get; init; }
 }
