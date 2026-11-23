@@ -144,7 +144,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
             {
                 if (commandText.Text == "булочка" && message != null)
                 {
-                    await SendAIAnswer(commandText, message, cancellationToken);
+                    await SendAIAnswer(message, cancellationToken);
                     return;
                 }
                 if (commandText.Text == "losses")
@@ -180,7 +180,10 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
             }
             catch (Exception e)
             {
-                telemetry.TrackTrace($"COMMAND FAILED: {e.Message}");
+                var context = message is null
+                    ? "message=null"
+                    : FormatAiMessageContext(message);
+                telemetry.TrackTrace($"COMMAND FAILED: {e.Message}; {context}");
                 telemetry.TrackException(e);
                 throw;
             }
@@ -189,7 +192,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         await Task.WhenAll(tasks);
     }
 
-    private async Task SendAIAnswer(ICommandAnswer commandText, Message message, CancellationToken cancellationToken)
+    private async Task SendAIAnswer(Message message, CancellationToken cancellationToken)
     {
         if (!aiChat.HasProviders || message.Text is null) return;
 
@@ -222,13 +225,14 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
                     });
                 }
 
-                // Only link history when the replied-to message itself was an AI turn we stored.
-                if (history.Count > 0 && history[^1].MessageId == replyToMessageId)
+                // History is non-empty only when the replied-to message itself was stored.
+                if (history.Count > 0)
                     historyReplyToMessageId = replyToMessageId;
             }
             catch (Exception ex)
             {
-                telemetry.TrackTrace($"AI history load failed: {ex.Message}");
+                telemetry.TrackTrace(
+                    $"AI history load failed: {ex.Message}; {FormatAiMessageContext(message)}");
                 telemetry.TrackException(ex);
             }
         }
@@ -245,16 +249,27 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         if (answer == null) return;
 
         var replyText = string.IsNullOrWhiteSpace(authorName) ? answer : $"{authorName}, {answer}";
-        var telegramText = string.IsNullOrWhiteSpace(authorName)
-            ? answer
-            : $"{EscapeTelegramMarkdown(authorName)}, {answer}";
+        // Plain text: model answers often contain *, _, etc. that break Telegram Markdown and
+        // prevent SaveExchangeAsync from running, which then starts a new chain on the next reply.
+        var telegramText = TruncateTelegramText(replyText);
 
-        var sent = await SendText(
-            message.MessageId,
-            message.Chat.Id,
-            telegramText,
-            cancellationToken,
-            commandText.ParseMode);
+        Message sent;
+        try
+        {
+            sent = await SendText(
+                message.MessageId,
+                message.Chat.Id,
+                telegramText,
+                cancellationToken,
+                parseMode: null);
+        }
+        catch (Exception ex)
+        {
+            telemetry.TrackTrace(
+                $"AI answer send failed: {ex.Message}; {FormatAiMessageContext(message)}; answerLength={replyText.Length}");
+            telemetry.TrackException(ex);
+            return;
+        }
 
         try
         {
@@ -284,10 +299,14 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         }
         catch (Exception ex)
         {
-            telemetry.TrackTrace($"AI history save failed: {ex.Message}");
+            telemetry.TrackTrace(
+                $"AI history save failed: {ex.Message}; {FormatAiMessageContext(message)}; sentMessageId={sent.MessageId}; historyReplyToMessageId={historyReplyToMessageId?.ToString() ?? "null"}");
             telemetry.TrackException(ex);
         }
     }
+
+    private static string FormatAiMessageContext(Message message) =>
+        $"chatId={message.Chat.Id}; messageId={message.MessageId}; replyToMessageId={(message.ReplyToMessage is { } reply ? reply.MessageId.ToString() : "null")}";
 
     private static string? FormatTelegramAuthorName(User? user) => user switch
     {
@@ -297,12 +316,12 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         _ => null
     };
 
-    private static string EscapeTelegramMarkdown(string text) =>
-        text
-            .Replace("_", "\\_", StringComparison.Ordinal)
-            .Replace("*", "\\*", StringComparison.Ordinal)
-            .Replace("`", "\\`", StringComparison.Ordinal)
-            .Replace("[", "\\[", StringComparison.Ordinal);
+    private const int TelegramMaxMessageLength = 4096;
+
+    private static string TruncateTelegramText(string text) =>
+        text.Length <= TelegramMaxMessageLength
+            ? text
+            : text[..(TelegramMaxMessageLength - 1)] + "…";
 
     private async Task<Message> SendText(int? replyTo, long chatId, string text,
         CancellationToken cancellationToken, ParseMode? parseMode = ParseMode.MarkdownV2) =>
