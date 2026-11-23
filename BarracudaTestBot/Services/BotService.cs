@@ -196,29 +196,40 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         var nowUtc = DateTimeOffset.UtcNow;
         var systemPrompt = $"Ти кішка з ім'ям Булочка. Відповідай як кішка, але технічно коректно. Поточний час (UTC): {nowUtc:yyyy-MM-dd HH:mm:ss}. Вважай цю дату та час поточними і не вигадуй інший час. Проте пиши дату в повідомленні. лише у випадках, коли тебе прямо просять про це.";
 
-        var authorName = message.From?.Username is { Length: > 0 } username
-            ? $"@{username}"
-            : message.From?.FirstName;
+        var authorName = FormatTelegramAuthorName(message.From);
 
         var conversation = new List<AiConversationTurn>();
 
+        int? historyReplyToMessageId = null;
         if (message.ReplyToMessage?.MessageId is int replyToMessageId)
         {
-            var history = await aiChatMessages.GetReplyChainAsync(
-                message.Chat.Id, replyToMessageId, cancellationToken);
-
-            foreach (var item in history)
+            try
             {
-                conversation.Add(new AiConversationTurn
+                var history = await aiChatMessages.GetReplyChainAsync(
+                    message.Chat.Id, replyToMessageId, cancellationToken);
+
+                foreach (var item in history)
                 {
-                    Role = item.Role switch
+                    conversation.Add(new AiConversationTurn
                     {
-                        "assistant" => AiConversationRole.Assistant,
-                        _ => AiConversationRole.User
-                    },
-                    Content = item.Text,
-                    AuthorName = item.AuthorName
-                });
+                        Role = item.Role switch
+                        {
+                            "assistant" => AiConversationRole.Assistant,
+                            _ => AiConversationRole.User
+                        },
+                        Content = item.Text,
+                        AuthorName = item.AuthorName
+                    });
+                }
+
+                // Only link history when the replied-to message itself was an AI turn we stored.
+                if (history.Count > 0 && history[^1].MessageId == replyToMessageId)
+                    historyReplyToMessageId = replyToMessageId;
+            }
+            catch (Exception ex)
+            {
+                telemetry.TrackTrace($"AI history load failed: {ex.Message}");
+                telemetry.TrackException(ex);
             }
         }
 
@@ -233,10 +244,15 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
         var answer = await aiChat.CompleteAsync(systemPrompt, conversation, cancellationToken);
         if (answer == null) return;
 
+        var replyText = string.IsNullOrWhiteSpace(authorName) ? answer : $"{authorName}, {answer}";
+        var telegramText = string.IsNullOrWhiteSpace(authorName)
+            ? answer
+            : $"{EscapeTelegramMarkdown(authorName)}, {answer}";
+
         var sent = await SendText(
             message.MessageId,
             message.Chat.Id,
-            answer,
+            telegramText,
             cancellationToken,
             commandText.ParseMode);
 
@@ -248,7 +264,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
                 {
                     ChatId = message.Chat.Id,
                     MessageId = message.MessageId,
-                    ReplyToMessageId = message.ReplyToMessage?.MessageId,
+                    ReplyToMessageId = historyReplyToMessageId,
                     Role = "user",
                     Text = message.Text,
                     AuthorName = authorName,
@@ -260,7 +276,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
                     MessageId = sent.MessageId,
                     ReplyToMessageId = message.MessageId,
                     Role = "assistant",
-                    Text = answer,
+                    Text = replyText,
                     AuthorName = null,
                     CreatedAt = createdAt
                 },
@@ -272,6 +288,21 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
             telemetry.TrackException(ex);
         }
     }
+
+    private static string? FormatTelegramAuthorName(User? user) => user switch
+    {
+        null => null,
+        { Username.Length: > 0 } => $"@{user.Username}",
+        { FirstName.Length: > 0 } => user.FirstName,
+        _ => null
+    };
+
+    private static string EscapeTelegramMarkdown(string text) =>
+        text
+            .Replace("_", "\\_", StringComparison.Ordinal)
+            .Replace("*", "\\*", StringComparison.Ordinal)
+            .Replace("`", "\\`", StringComparison.Ordinal)
+            .Replace("[", "\\[", StringComparison.Ordinal);
 
     private async Task<Message> SendText(int? replyTo, long chatId, string text,
         CancellationToken cancellationToken, ParseMode? parseMode = ParseMode.MarkdownV2) =>
