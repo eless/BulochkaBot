@@ -306,7 +306,7 @@ public class BotService(WordChecker wordChecker, StickerChecker stickerChecker, 
     }
 
     private static string FormatAiMessageContext(Message message) =>
-        $"chatId={message.Chat.Id}; messageId={message.MessageId}; replyToMessageId={message.ReplyToMessage?.MessageId?.ToString() ?? "null"}";
+        $"chatId={message.Chat.Id}; messageId={message.MessageId}; replyToMessageId={(message.ReplyToMessage is { } reply ? reply.MessageId.ToString() : "null")}";
 
     private static string? FormatTelegramAuthorName(User? user) => user switch
     {
